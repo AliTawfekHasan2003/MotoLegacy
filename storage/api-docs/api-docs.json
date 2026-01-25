@@ -1,12 +1,12 @@
 {
     "openapi": "3.0.0",
     "info": {
-        "title": "API WAFFER",
+        "title": "API Motolegacy",
         "version": "1.0"
     },
     "servers": [
         {
-            "url": "https://qasaedona-api.squaretech.tech/api"
+            "url": "https://motolegacy-production-3202.up.railway.app/api"
         },
         {
             "url": "http://127.0.0.1:8000/api"

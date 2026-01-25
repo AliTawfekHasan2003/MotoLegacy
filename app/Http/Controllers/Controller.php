@@ -7,10 +7,10 @@ use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Routing\Controller as BaseController;
 
 /**
- * @OA\Info(title="API WAFFER", version="1.0")
+ * @OA\Info(title="API Motolegacy", version="1.0")
  *
  *  @OA\Server(
- *      url="https://qasaedona-api.squaretech.tech/api",
+ *      url="https://motolegacy-production-3202.up.railway.app/api",
  *  )
  *  @OA\Server(
  *      url="http://127.0.0.1:8000/api",
