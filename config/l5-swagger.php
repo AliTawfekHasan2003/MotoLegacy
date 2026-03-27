@@ -12,8 +12,10 @@ return [
                 /*
                  * Route for accessing api documentation interface
                 */
-                'api' => 'api/documentation',
-            ],
+                'routes' => [
+                    'api' => 'motolegacy/api/documentation',
+                ],
+                ],
             'paths' => [
                 /*
                  * Edit to include full URL in ui for assets

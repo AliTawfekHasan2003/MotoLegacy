@@ -73,7 +73,7 @@
         "/admin/login": {
             "post": {
                 "tags": [
-                    "Admin Auth"
+                    "Admin - Auth"
                 ],
                 "description": "Login for Admin only",
                 "operationId": "adminLogin",
@@ -111,6 +111,44 @@
                         "description": "Validation error"
                     }
                 }
+            }
+        },
+        "/admin/logout": {
+            "post": {
+                "tags": [
+                    "Admin - Auth"
+                ],
+                "description": "Logout admin",
+                "operationId": "adminLogout",
+                "responses": {
+                    "200": {
+                        "description": "Logged out successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
+        "/admin/profile": {
+            "get": {
+                "tags": [
+                    "Admin - Auth"
+                ],
+                "description": "Get admin profile",
+                "operationId": "adminGetProfile",
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
             }
         },
         "/admin/cars": {
@@ -2514,8 +2552,8 @@
             "description": "Admin - Rental - Requests"
         },
         {
-            "name": "Admin Auth",
-            "description": "Admin Auth"
+            "name": "Admin - Auth",
+            "description": "Admin - Auth"
         },
         {
             "name": "Admin - Cars",

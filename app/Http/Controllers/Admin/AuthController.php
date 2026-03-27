@@ -15,7 +15,7 @@ class AuthController extends Controller
      *     path="/admin/login",
      *     description="Login for Admin only",
      *     operationId="adminLogin",
-     *     tags={"Admin Auth"},
+     *     tags={"Admin - Auth"},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\MediaType(
@@ -81,12 +81,33 @@ class AuthController extends Controller
         ], 422);
     }
 
-    public function logout()
+    /**
+     * @OA\Post(
+     *     path="/admin/logout",
+     *     description="Logout admin",
+     *     operationId="adminLogout",
+     *     tags={"Admin - Auth"},
+     *     security={{"bearer_token":{}}},
+     *     @OA\Response(response=200, description="Logged out successfully"),
+     * )
+     */
+    public function logout(Request $request)
     {
-        $user = to_user(\Illuminate\Support\Facades\Auth::user());
+        $user = to_user(Auth::user());
         to_token($user->currentAccessToken())->delete();
         return response()->json(['message' => 'Logged out successfully']);
     }
+
+     /**
+     * @OA\Get(
+     *     path="/admin/profile",
+     *     description="Get admin profile",
+     *     operationId="adminGetProfile",
+     *     tags={"Admin - Auth"},
+     *     security={{"bearer_token":{}}},
+     *     @OA\Response(response=200, description="Success"),
+     * )
+     */
 
     public function get_profile()
     {
