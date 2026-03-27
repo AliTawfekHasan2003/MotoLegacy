@@ -1761,7 +1761,7 @@
                     }
                 ]
             },
-            "put": {
+            "post": {
                 "tags": [
                     "Seller - Auth"
                 ],

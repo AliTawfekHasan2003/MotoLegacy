@@ -177,7 +177,7 @@ class AuthController extends Controller
     }
 
     /**
-     * @OA\Put(
+     * @OA\Post(
      *     path="/seller/profile",
      *     description="Edit seller profile",
      *     operationId="sellerEditProfile",
