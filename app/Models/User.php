@@ -22,13 +22,15 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
-        'phone_country_id',
         'phone',
-        'country_id',
-        'summary',
-        'image',
         'password',
-        'status',
+        'birth_date',
+        'address',
+        'license_number',
+        'license_expiry_date',
+        'business_type',
+        'role_id',
+        'is_active',
     ];
 
     /**
@@ -48,20 +50,43 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'birth_date' => 'date',
+        'license_expiry_date' => 'date',
+        'is_active' => 'boolean',
     ];
 
     public function roleModel()
     {
-        return $this->roles()->first();
+        return $this->belongsTo(\Spatie\Permission\Models\Role::class, 'role_id');
     }
 
-    public function nationality()
+    public function cars()
     {
-        return $this->hasOne(Country::class, 'id', 'country_id');
+        return $this->hasMany(Car::class);
     }
 
-    public function phone_country()
+    public function purchaseRequests()
     {
-        return $this->hasOne(Country::class, 'id', 'phone_country_id');
+        return $this->hasMany(PurchaseRequest::class);
+    }
+
+    public function rentalRequests()
+    {
+        return $this->hasMany(RentalRequest::class);
+    }
+
+    public function favorites()
+    {
+        return $this->belongsToMany(Car::class, 'favorites');
+    }
+
+    public function ratingsReceived()
+    {
+        return $this->hasMany(Rating::class, 'seller_id');
+    }
+
+    public function ratingsGiven()
+    {
+        return $this->hasMany(Rating::class, 'user_id');
     }
 }

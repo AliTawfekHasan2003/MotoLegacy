@@ -16,15 +16,19 @@ class UserResource extends JsonResource
     {
         return [
             'id'                => $this->id, 
-            'nationality'       => new CountryResource($this->whenLoaded('nationality')), 
             'name'              => $this->name, 
             'email'             => $this->email, 
-            'phone_country'     => new CountryResource($this->whenLoaded('phone_country')), 
             'phone'             => $this->phone, 
-            'image'             => $this->image, 
-            'summary'           => $this->summary, 
-            'status'            => $this->status,
-            'role'                  => $this->roleModel(),
+            'is_active'         => $this->is_active,
+            'birth_date'        => $this->birth_date,
+            'address'           => $this->address,
+            'license_number'    => $this->license_number,
+            'license_expiry_date' => $this->license_expiry_date,
+            'business_type'     => $this->business_type,
+            'role_id'           => $this->role_id,
+            'role_name'         => $this->roleModel?->name,
+            'created_at'        => $this->created_at,
+            'updated_at'        => $this->updated_at,
         ];
     }
 }

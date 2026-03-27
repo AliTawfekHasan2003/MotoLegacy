@@ -14,37 +14,50 @@ class PermissionSeeder extends Seeder
      */
     public function run(): void
     {
-        $permissions  = Permission::all()->pluck('name')->toArray();
+        // Reset cached roles and permissions
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
-        if(!in_array('users.read', $permissions))
-            Permission::create(['name' => 'users.read']);
-        if(!in_array('users.write', $permissions))
-            Permission::create(['name' => 'users.write']);
-        if(!in_array('users.delete', $permissions))
-            Permission::create(['name' => 'users.delete']);
+        // Permissions
+        $permissions = [
+            'users.manage',
+            'cars.read',
+            'cars.create',
+            'cars.update',
+            'cars.delete',
+            'requests.create',
+            'requests.view_own',
+            'requests.manage', // Admin/Seller manage incoming requests
+            'messages.read',
+            'statistics.view',
+        ];
 
-        if(!in_array('roles.read', $permissions))
-            Permission::create(['name' => 'roles.read']);
-        if(!in_array('roles.write', $permissions))
-            Permission::create(['name' => 'roles.write']);
-        if(!in_array('roles.delete', $permissions))
-            Permission::create(['name' => 'roles.delete']);
+        foreach ($permissions as $permission) {
+            Permission::firstOrCreate(['name' => $permission]);
+        }
 
-        if(!Role::where('name', 'admin')->exists())
-            Role::create([
-                'id'         => 1,
-                'name'       => 'admin',
-                'guard_name' => 'web',
-            ]);
-        if(!Role::where('name', 'user')->exists())
-            Role::create([
-                'id'         => 2,
-                'name'       => 'user',
-                'guard_name' => 'web',
-            ]);
+        // Roles
+        $adminRole = Role::firstOrCreate(['name' => 'admin']);
+        $sellerRole = Role::firstOrCreate(['name' => 'seller']);
+        $userRole = Role::firstOrCreate(['name' => 'user']);
 
-        $admin_role = Role::where('name', 'admin')->first();
-        $admin_permissions = Permission::pluck('id')->toArray();
-        $admin_role->syncPermissions($admin_permissions);
+        // Assign all permissions to admin
+        $adminRole->syncPermissions(Permission::all());
+
+        // Assign permissions to seller
+        $sellerRole->syncPermissions([
+            'cars.read',
+            'cars.create',
+            'cars.update',
+            'cars.delete',
+            'requests.view_own',
+            'requests.manage',
+        ]);
+
+        // Assign permissions to user
+        $userRole->syncPermissions([
+            'cars.read',
+            'requests.create',
+            'requests.view_own',
+        ]);
     }
 }

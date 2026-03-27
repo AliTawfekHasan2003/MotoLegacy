@@ -6,29 +6,23 @@
     },
     "servers": [
         {
-            "url": "https://motolegacy-production-3202.up.railway.app/api"
+            "url": "https://KidziBack.squaretech.tech/motolegacy/api"
         },
         {
-            "url": "http://127.0.0.1:8000/api"
+            "url": "http://127.0.0.1:8000/motolegacy/api"
         }
     ],
     "paths": {
-        "/admin/permissions": {
+        "/admin/stats": {
             "get": {
                 "tags": [
-                    "Permissions"
+                    "Admin - Stats"
                 ],
-                "description": "get all permissions",
-                "operationId": "4c0aee37d4eecedce47288592cdd8eb8",
+                "summary": "Get system wide statistics",
+                "operationId": "0faa57e49f7d55595356a44bf680074c",
                 "responses": {
                     "200": {
-                        "description": "Success"
-                    },
-                    "401": {
-                        "description": "Unauthenticated"
-                    },
-                    "403": {
-                        "description": "Forbidden. This action is unauthorized."
+                        "description": "Successful operation"
                     }
                 },
                 "security": [
@@ -38,22 +32,16 @@
                 ]
             }
         },
-        "/admin/permissions/me": {
+        "/admin/purchase-requests": {
             "get": {
                 "tags": [
-                    "Permissions"
+                    "Admin - Purchase - Requests"
                 ],
-                "description": "Get my permissions",
-                "operationId": "43edc8396c8449d05255fb7301e77d9e",
+                "summary": "List all purchase requests in system",
+                "operationId": "019c635b6d15f23547eed1d5143e200f",
                 "responses": {
                     "200": {
-                        "description": "Success"
-                    },
-                    "401": {
-                        "description": "Unauthenticated"
-                    },
-                    "403": {
-                        "description": "Forbidden. This action is unauthorized."
+                        "description": "Successful operation"
                     }
                 },
                 "security": [
@@ -63,18 +51,146 @@
                 ]
             }
         },
-        "/admin/roles/{role}/permissions": {
+        "/admin/rental-requests": {
             "get": {
                 "tags": [
-                    "Permissions"
+                    "Admin - Rental - Requests"
                 ],
-                "summary": "Get permissions for a role",
-                "operationId": "9ff29d09d1829574956b9ac88a877549",
+                "summary": "List all rental requests in system",
+                "operationId": "3dd9a962a6144d01721fec7d270c4114",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
+        "/admin/login": {
+            "post": {
+                "tags": [
+                    "Admin Auth"
+                ],
+                "description": "Login for Admin only",
+                "operationId": "adminLogin",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "password": {
+                                        "type": "password"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "403": {
+                        "description": "Forbidden - Not an admin"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            }
+        },
+        "/admin/cars": {
+            "get": {
+                "tags": [
+                    "Admin - Cars"
+                ],
+                "summary": "List all visible cars with optional filters",
+                "operationId": "ba01c97694fb68c55faccdc185e8d1ab",
                 "parameters": [
                     {
-                        "name": "role",
+                        "name": "brand",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "sale",
+                                "rent"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "year",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "min_price",
+                        "in": "query",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "max_price",
+                        "in": "query",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "category_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
+        "/admin/cars/{id}": {
+            "get": {
+                "tags": [
+                    "Admin - Cars"
+                ],
+                "summary": "Get car details",
+                "operationId": "df44b26b37782688a3ecf1f58c710fbc",
+                "parameters": [
+                    {
+                        "name": "id",
                         "in": "path",
-                        "description": "The ID of the role",
                         "required": true,
                         "schema": {
                             "type": "integer"
@@ -83,13 +199,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Success"
-                    },
-                    "401": {
-                        "description": "Unauthenticated"
-                    },
-                    "403": {
-                        "description": "Forbidden. This action is unauthorized."
+                        "description": "Successful operation"
                     }
                 },
                 "security": [
@@ -97,18 +207,19 @@
                         "bearer_token": []
                     }
                 ]
-            },
+            }
+        },
+        "/admin/cars/{id}/approval": {
             "post": {
                 "tags": [
-                    "Permissions"
+                    "Admin - Cars"
                 ],
-                "summary": "Set permissions for a role",
-                "operationId": "9d9f1735dffe7bc4a1aed0879cec6920",
+                "summary": "Approve or reject car",
+                "operationId": "4a501046544ba78c9b9bf493077d78ac",
                 "parameters": [
                     {
-                        "name": "role",
+                        "name": "id",
                         "in": "path",
-                        "description": "The ID of the role",
                         "required": true,
                         "schema": {
                             "type": "integer"
@@ -120,21 +231,20 @@
                     "content": {
                         "multipart/form-data": {
                             "schema": {
+                                "required": [
+                                    "status"
+                                ],
                                 "properties": {
-                                    "permissions[0]": {
-                                        "description": "The names of the permissions",
+                                    "status": {
                                         "type": "string",
-                                        "default": ""
+                                        "enum": [
+                                            "approved",
+                                            "rejected"
+                                        ]
                                     },
-                                    "permissions[1]": {
-                                        "description": "The names of the permissions",
+                                    "_method": {
                                         "type": "string",
-                                        "default": ""
-                                    },
-                                    "permissions[2]": {
-                                        "description": "The names of the permissions",
-                                        "type": "string",
-                                        "default": ""
+                                        "example": "PATCH"
                                     }
                                 },
                                 "type": "object"
@@ -144,13 +254,191 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Success"
-                    },
-                    "401": {
-                        "description": "Unauthenticated"
-                    },
-                    "403": {
-                        "description": "Forbidden. This action is unauthorized."
+                        "description": "Car status updated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
+        "/admin/categories": {
+            "get": {
+                "tags": [
+                    "Admin Categories"
+                ],
+                "summary": "List all categories",
+                "operationId": "0cf6e89e69cabba5e72db6323e787007",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Admin Categories"
+                ],
+                "summary": "Create a new category (Admin only)",
+                "operationId": "a533ff285fab1552a0e830b3d4e76d82",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "description": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Category created"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
+        "/admin/categories/{id}": {
+            "get": {
+                "tags": [
+                    "Admin Categories"
+                ],
+                "summary": "Get category details",
+                "operationId": "4f4954eaefabb4b722c23de0bb0c9c4e",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Admin Categories"
+                ],
+                "summary": "Update a category (Admin only)",
+                "operationId": "9e23a7f4760a9b72457b181d53a07ec5",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "description": {
+                                        "type": "string"
+                                    },
+                                    "_method": {
+                                        "type": "string",
+                                        "example": "PATCH"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Category updated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Admin Categories"
+                ],
+                "summary": "Delete a category (Admin only)",
+                "operationId": "0ee11e2aa6e87c46d4a4a8c156605743",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Category deleted"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
+        "/admin/messages": {
+            "get": {
+                "tags": [
+                    "Admin Messages"
+                ],
+                "summary": "List all contact messages (Admin only)",
+                "operationId": "7d34b2768feed395003de8c09a49b0f5",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
                     }
                 },
                 "security": [
@@ -163,7 +451,7 @@
         "/admin/roles": {
             "get": {
                 "tags": [
-                    "Roles"
+                    "Admin Roles"
                 ],
                 "description": "get all roles",
                 "operationId": "a7d4464f8781e2ae359e12db6d703250",
@@ -214,192 +502,18 @@
                         "bearer_token": []
                     }
                 ]
-            },
-            "post": {
-                "tags": [
-                    "Roles"
-                ],
-                "description": "Create a new role",
-                "operationId": "9b47a7a8165f42e9185eb86dcf434d5d",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "multipart/form-data": {
-                            "schema": {
-                                "required": [
-                                    "name"
-                                ],
-                                "properties": {
-                                    "name": {
-                                        "type": "string",
-                                        "example": ""
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": {
-                        "description": "Created"
-                    },
-                    "401": {
-                        "description": "Unauthenticated"
-                    },
-                    "422": {
-                        "description": "Validation error"
-                    }
-                },
-                "security": [
-                    {
-                        "bearer_token": []
-                    }
-                ]
-            }
-        },
-        "/admin/roles/{role}": {
-            "get": {
-                "tags": [
-                    "Roles"
-                ],
-                "description": "Get a role by ID",
-                "operationId": "d9c06baf0ba84fc81469d319490ff387",
-                "parameters": [
-                    {
-                        "name": "role",
-                        "in": "path",
-                        "description": "Role ID",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "format": "int64"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Success"
-                    },
-                    "401": {
-                        "description": "Unauthenticated"
-                    },
-                    "404": {
-                        "description": "Role not found"
-                    }
-                },
-                "security": [
-                    {
-                        "bearer_token": []
-                    }
-                ]
-            },
-            "post": {
-                "tags": [
-                    "Roles"
-                ],
-                "description": "Edit specific role",
-                "operationId": "7f85c1ef2e2f3593d0643758d765f364",
-                "parameters": [
-                    {
-                        "name": "role",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "multipart/form-data": {
-                            "schema": {
-                                "required": [
-                                    "name"
-                                ],
-                                "properties": {
-                                    "name": {
-                                        "type": "string",
-                                        "example": ""
-                                    },
-                                    "_method": {
-                                        "type": "string",
-                                        "format": "string",
-                                        "example": "PUT"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Success"
-                    },
-                    "401": {
-                        "description": "Unauthenticated"
-                    },
-                    "422": {
-                        "description": "Validation error"
-                    },
-                    "403": {
-                        "description": "Forbidden. This action is unauthorized."
-                    }
-                },
-                "security": [
-                    {
-                        "bearer_token": []
-                    }
-                ]
-            },
-            "delete": {
-                "tags": [
-                    "Roles"
-                ],
-                "description": "Delete a role by ID",
-                "operationId": "0bdca7b6712cae995096e9d4ea2149c9",
-                "parameters": [
-                    {
-                        "name": "role",
-                        "in": "path",
-                        "description": "Role ID",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "format": "int64"
-                        }
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "No Content"
-                    },
-                    "401": {
-                        "description": "Unauthenticated"
-                    },
-                    "404": {
-                        "description": "Role not found"
-                    }
-                },
-                "security": [
-                    {
-                        "bearer_token": []
-                    }
-                ]
             }
         },
         "/admin/users": {
             "get": {
                 "tags": [
-                    "Admin - Users"
+                    "Admin Users"
                 ],
                 "description": "Get all users",
                 "operationId": "get_users",
                 "parameters": [
                     {
-                        "name": "q",
+                        "name": "search",
                         "in": "query",
                         "required": false,
                         "schema": {
@@ -411,11 +525,11 @@
                         "in": "query",
                         "required": false,
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
-                        "name": "status",
+                        "name": "is_active",
                         "in": "query",
                         "required": false,
                         "schema": {
@@ -440,17 +554,6 @@
                         "required": false,
                         "schema": {
                             "type": "date"
-                        }
-                    },
-                    {
-                        "name": "type",
-                        "in": "query",
-                        "required": false,
-                        "schema": {
-                            "type": "string",
-                            "enum": [
-                                "employee"
-                            ]
                         }
                     },
                     {
@@ -487,7 +590,7 @@
             },
             "post": {
                 "tags": [
-                    "Admin - Users"
+                    "Admin Users"
                 ],
                 "description": "Create new user.",
                 "operationId": "CreateUser",
@@ -500,6 +603,7 @@
                                     "name",
                                     "email",
                                     "password",
+                                    "phone",
                                     "role_id"
                                 ],
                                 "properties": {
@@ -516,20 +620,25 @@
                                     "password_confirmation": {
                                         "type": "string"
                                     },
-                                    "phone_country_id": {
-                                        "type": "integer"
-                                    },
                                     "phone": {
                                         "type": "string"
                                     },
-                                    "country_id": {
-                                        "type": "integer"
+                                    "birth_date": {
+                                        "type": "string",
+                                        "format": "date"
                                     },
-                                    "summary": {
+                                    "address": {
                                         "type": "string"
                                     },
-                                    "image": {
-                                        "type": "file"
+                                    "license_number": {
+                                        "type": "string"
+                                    },
+                                    "license_expiry_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "business_type": {
+                                        "type": "string"
                                     },
                                     "role_id": {
                                         "type": "integer"
@@ -555,7 +664,7 @@
         "/admin/users/{id}": {
             "get": {
                 "tags": [
-                    "Admin - Users"
+                    "Admin Users"
                 ],
                 "description": "Get specific user",
                 "operationId": "show_user",
@@ -582,7 +691,7 @@
             },
             "post": {
                 "tags": [
-                    "Admin - Users"
+                    "Admin Users"
                 ],
                 "description": "Edit user",
                 "operationId": "edit_user",
@@ -601,12 +710,6 @@
                     "content": {
                         "multipart/form-data": {
                             "schema": {
-                                "required": [
-                                    "name",
-                                    "email",
-                                    "phone",
-                                    "role_id"
-                                ],
                                 "properties": {
                                     "name": {
                                         "type": "string"
@@ -615,20 +718,25 @@
                                         "type": "string",
                                         "format": "email"
                                     },
-                                    "phone_country_id": {
-                                        "type": "integer"
-                                    },
                                     "phone": {
                                         "type": "string"
                                     },
-                                    "country_id": {
-                                        "type": "integer"
+                                    "birth_date": {
+                                        "type": "string",
+                                        "format": "date"
                                     },
-                                    "summary": {
+                                    "address": {
                                         "type": "string"
                                     },
-                                    "image": {
-                                        "type": "file"
+                                    "license_number": {
+                                        "type": "string"
+                                    },
+                                    "license_expiry_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "business_type": {
+                                        "type": "string"
                                     },
                                     "role_id": {
                                         "type": "integer"
@@ -657,7 +765,7 @@
             },
             "delete": {
                 "tags": [
-                    "Admin - Users"
+                    "Admin Users"
                 ],
                 "description": "Delete user",
                 "operationId": "delete_user",
@@ -686,7 +794,7 @@
         "/admin/users/{id}/reset_password": {
             "post": {
                 "tags": [
-                    "Admin - Users"
+                    "Admin Users"
                 ],
                 "description": "reset user password.",
                 "operationId": "79a90a10e9aa79ceb8ca022cc91efe22",
@@ -737,7 +845,7 @@
         "/admin/users/{id}/activate": {
             "post": {
                 "tags": [
-                    "Admin - Users"
+                    "Admin Users"
                 ],
                 "description": "activate the user.",
                 "operationId": "049105eab1f46407301541f17ccc7386",
@@ -768,7 +876,7 @@
                 "tags": [
                     "User - Auth"
                 ],
-                "description": "Register by enter name,email,phone.",
+                "description": "Register by enter name,email,phone,password,birth_date,address.",
                 "operationId": "Register",
                 "requestBody": {
                     "required": true,
@@ -778,7 +886,8 @@
                                 "required": [
                                     "name",
                                     "email",
-                                    "password"
+                                    "password",
+                                    "phone"
                                 ],
                                 "properties": {
                                     "name": {
@@ -792,6 +901,16 @@
                                         "type": "string"
                                     },
                                     "password_confirmation": {
+                                        "type": "string"
+                                    },
+                                    "phone": {
+                                        "type": "string"
+                                    },
+                                    "birth_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "address": {
                                         "type": "string"
                                     }
                                 },
@@ -877,20 +996,19 @@
                                     "name": {
                                         "type": "string"
                                     },
-                                    "phone_country_id": {
-                                        "type": "integer"
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
                                     },
                                     "phone": {
                                         "type": "string"
                                     },
-                                    "country_id": {
-                                        "type": "integer"
+                                    "birth_date": {
+                                        "type": "string",
+                                        "format": "date"
                                     },
-                                    "summary": {
+                                    "address": {
                                         "type": "string"
-                                    },
-                                    "image": {
-                                        "type": "file"
                                     },
                                     "_method": {
                                         "type": "string",
@@ -934,6 +1052,46 @@
                 ]
             }
         },
+        "/user/change-password": {
+            "post": {
+                "tags": [
+                    "User - Auth"
+                ],
+                "description": "change my password for user",
+                "operationId": "bf7b80db41fde0fe36ebfc857c42c66c",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "current_password": {
+                                        "type": "string"
+                                    },
+                                    "password": {
+                                        "type": "string"
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
         "/users/delete_account": {
             "delete": {
                 "tags": [
@@ -952,24 +1110,1476 @@
                     }
                 ]
             }
+        },
+        "/cars": {
+            "get": {
+                "tags": [
+                    "User - Cars"
+                ],
+                "summary": "List all visible cars with optional filters",
+                "operationId": "d8232bc6a16fec784f4a5fca541f9856",
+                "parameters": [
+                    {
+                        "name": "brand",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "sale",
+                                "rent"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "year",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "min_price",
+                        "in": "query",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "max_price",
+                        "in": "query",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "category_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    }
+                }
+            }
+        },
+        "/cars/{id}": {
+            "get": {
+                "tags": [
+                    "User - Cars"
+                ],
+                "summary": "Get car details",
+                "operationId": "8b43987d328663989329b7b6b01db674",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    }
+                }
+            }
+        },
+        "/categories": {
+            "get": {
+                "tags": [
+                    "User - Categories"
+                ],
+                "summary": "List all categories",
+                "operationId": "ead5fb1cf2a7453acb2e37928a1b1eaf",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    }
+                }
+            }
+        },
+        "/categories/{id}": {
+            "get": {
+                "tags": [
+                    "User - Categories"
+                ],
+                "summary": "Get category details",
+                "operationId": "4cdf41756315109f1efc72787db5830a",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    }
+                }
+            }
+        },
+        "/favorites": {
+            "get": {
+                "tags": [
+                    "User - Favorites"
+                ],
+                "summary": "List user's favorite cars",
+                "operationId": "de458f646b8ab1d9eb829bbd6a218808",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "User - Favorites"
+                ],
+                "summary": "Toggle a car in user's favorites",
+                "operationId": "0caf4d36b19c2609b4304ed4df1afee9",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "car_id"
+                                ],
+                                "properties": {
+                                    "car_id": {
+                                        "description": "ID of the car",
+                                        "type": "integer",
+                                        "example": 1
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Toggled successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
+        "/messages": {
+            "post": {
+                "tags": [
+                    "User - Contact Messages"
+                ],
+                "summary": "Submit a contact message",
+                "operationId": "941d583a09ed64becb2c2f4753c22501",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "email",
+                                    "subject",
+                                    "message"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Ali Hasan"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "ali@example.com"
+                                    },
+                                    "subject": {
+                                        "type": "string",
+                                        "example": "Inquiry about a car"
+                                    },
+                                    "message": {
+                                        "type": "string",
+                                        "example": "I would like more details about this car."
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Message submitted"
+                    }
+                }
+            }
+        },
+        "/ratings/{seller_id}": {
+            "get": {
+                "tags": [
+                    "User - Ratings & Reviews"
+                ],
+                "summary": "List all ratings for a specific seller",
+                "operationId": "7bb5eea16adbc6dc7754b0416b559ed0",
+                "parameters": [
+                    {
+                        "name": "seller_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    }
+                }
+            }
+        },
+        "/ratings": {
+            "post": {
+                "tags": [
+                    "User - Ratings & Reviews"
+                ],
+                "summary": "Rate a seller",
+                "operationId": "f76110814bddc4625c9a09750809714c",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "seller_id",
+                                    "rating"
+                                ],
+                                "properties": {
+                                    "seller_id": {
+                                        "description": "ID of the seller",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "rating": {
+                                        "description": "Rating value from 1 to 5",
+                                        "type": "integer",
+                                        "maximum": 5,
+                                        "minimum": 1,
+                                        "example": 5
+                                    },
+                                    "comment": {
+                                        "type": "string",
+                                        "example": "Great seller, highly recommended"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Rating submitted"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
+        "/purchase-requests": {
+            "post": {
+                "tags": [
+                    "User - Requests - Rental"
+                ],
+                "summary": "Submit a purchase request",
+                "operationId": "71aee536e646e875b8195f2960a9a6d9",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "car_id"
+                                ],
+                                "properties": {
+                                    "car_id": {
+                                        "type": "integer"
+                                    },
+                                    "meeting_location": {
+                                        "type": "string"
+                                    },
+                                    "meeting_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "notes": {
+                                        "type": "string"
+                                    },
+                                    "id_number": {
+                                        "type": "string"
+                                    },
+                                    "payment_method": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Request submitted"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
+        "/my-purchase-requests": {
+            "get": {
+                "tags": [
+                    "User - Requests - Rental"
+                ],
+                "summary": "List purchase requests made by user",
+                "operationId": "f2f3226d5f37760426e6dd5ff3fbfc59",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
+        "/rental-requests": {
+            "post": {
+                "tags": [
+                    "User - Requests - Rental"
+                ],
+                "summary": "Submit a rental request",
+                "operationId": "4f148be0ff76348f1c311e78250dcc87",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "car_id",
+                                    "start_date",
+                                    "end_date"
+                                ],
+                                "properties": {
+                                    "car_id": {
+                                        "type": "integer"
+                                    },
+                                    "start_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "end_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "pickup_location": {
+                                        "type": "string"
+                                    },
+                                    "return_location": {
+                                        "type": "string"
+                                    },
+                                    "notes": {
+                                        "type": "string"
+                                    },
+                                    "id_number": {
+                                        "type": "string"
+                                    },
+                                    "payment_method": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Request submitted"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
+        "/my-rental-requests": {
+            "get": {
+                "tags": [
+                    "User - Requests - Rental"
+                ],
+                "summary": "List rental requests made by user",
+                "operationId": "7e60966a1c0b9007497e8127d834d7f8",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
+        "/seller/register": {
+            "post": {
+                "tags": [
+                    "Seller - Auth"
+                ],
+                "description": "Register a new seller account",
+                "operationId": "sellerRegister",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "email",
+                                    "password",
+                                    "password_confirmation",
+                                    "phone",
+                                    "license_number",
+                                    "business_type"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "password": {
+                                        "type": "string"
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string"
+                                    },
+                                    "phone": {
+                                        "type": "string"
+                                    },
+                                    "birth_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "address": {
+                                        "type": "string"
+                                    },
+                                    "license_number": {
+                                        "type": "string"
+                                    },
+                                    "license_expiry_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "business_type": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Seller registered successfully"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            }
+        },
+        "/seller/login": {
+            "post": {
+                "tags": [
+                    "Seller - Auth"
+                ],
+                "description": "Login for Sellers only",
+                "operationId": "sellerLogin",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "password": {
+                                        "type": "password"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "403": {
+                        "description": "Forbidden - Not a seller"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            }
+        },
+        "/seller/logout": {
+            "post": {
+                "tags": [
+                    "Seller - Auth"
+                ],
+                "description": "Logout seller",
+                "operationId": "sellerLogout",
+                "responses": {
+                    "200": {
+                        "description": "Logged out successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
+        "/seller/profile": {
+            "get": {
+                "tags": [
+                    "Seller - Auth"
+                ],
+                "description": "Get seller profile",
+                "operationId": "sellerGetProfile",
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Seller - Auth"
+                ],
+                "description": "Edit seller profile",
+                "operationId": "sellerEditProfile",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "phone": {
+                                        "type": "string"
+                                    },
+                                    "birth_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "address": {
+                                        "type": "string"
+                                    },
+                                    "license_number": {
+                                        "type": "string"
+                                    },
+                                    "license_expiry_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "business_type": {
+                                        "type": "string"
+                                    },
+                                    "_method": {
+                                        "type": "string",
+                                        "example": "PUT"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
+        "/seller/change-password": {
+            "post": {
+                "tags": [
+                    "Seller - Auth"
+                ],
+                "description": "change my password for seller",
+                "operationId": "899ea8101fddb5fdae106f259f1083cb",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "current_password": {
+                                        "type": "string"
+                                    },
+                                    "password": {
+                                        "type": "string"
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
+        "/seller/account": {
+            "delete": {
+                "tags": [
+                    "Seller - Auth"
+                ],
+                "description": "Delete seller account",
+                "operationId": "sellerDeleteAccount",
+                "responses": {
+                    "204": {
+                        "description": "Deleted"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
+        "/seller/cars": {
+            "get": {
+                "tags": [
+                    "Seller - Cars"
+                ],
+                "summary": "List all visible cars with optional filters",
+                "operationId": "8b883685d604f97137c4d4898abc6e0c",
+                "parameters": [
+                    {
+                        "name": "brand",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "sale",
+                                "rent"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "year",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "min_price",
+                        "in": "query",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "max_price",
+                        "in": "query",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "category_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Seller - Cars"
+                ],
+                "summary": "Add a new car for sale or rent",
+                "operationId": "f51e8f064ae7da478e966f71b42dd2b6",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "category_id",
+                                    "type",
+                                    "name",
+                                    "year",
+                                    "brand",
+                                    "color",
+                                    "fuel_type",
+                                    "transmission",
+                                    "doors",
+                                    "seats"
+                                ],
+                                "properties": {
+                                    "category_id": {
+                                        "type": "integer"
+                                    },
+                                    "type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "sale",
+                                            "rent"
+                                        ]
+                                    },
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "year": {
+                                        "type": "integer"
+                                    },
+                                    "brand": {
+                                        "type": "string"
+                                    },
+                                    "color": {
+                                        "type": "string"
+                                    },
+                                    "fuel_type": {
+                                        "type": "string"
+                                    },
+                                    "transmission": {
+                                        "type": "string"
+                                    },
+                                    "doors": {
+                                        "type": "integer"
+                                    },
+                                    "seats": {
+                                        "type": "integer"
+                                    },
+                                    "purchase_price": {
+                                        "type": "number"
+                                    },
+                                    "rental_price_per_day": {
+                                        "type": "number"
+                                    },
+                                    "description": {
+                                        "type": "string"
+                                    },
+                                    "image": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "previous_owners_count": {
+                                        "type": "integer"
+                                    },
+                                    "registration_country": {
+                                        "type": "string"
+                                    },
+                                    "engine_year": {
+                                        "type": "integer"
+                                    },
+                                    "cylinders_count": {
+                                        "type": "integer"
+                                    },
+                                    "drive_system": {
+                                        "type": "string"
+                                    },
+                                    "plate_number": {
+                                        "type": "string"
+                                    },
+                                    "fuel_consumption": {
+                                        "type": "string"
+                                    },
+                                    "warranty": {
+                                        "type": "integer",
+                                        "enum": [
+                                            0,
+                                            1
+                                        ]
+                                    },
+                                    "warranty_duration": {
+                                        "type": "integer"
+                                    },
+                                    "air_conditioning": {
+                                        "type": "integer",
+                                        "enum": [
+                                            0,
+                                            1
+                                        ]
+                                    },
+                                    "airbags": {
+                                        "type": "integer",
+                                        "enum": [
+                                            0,
+                                            1
+                                        ]
+                                    },
+                                    "rear_camera": {
+                                        "type": "integer",
+                                        "enum": [
+                                            0,
+                                            1
+                                        ]
+                                    },
+                                    "bluetooth": {
+                                        "type": "integer",
+                                        "enum": [
+                                            0,
+                                            1
+                                        ]
+                                    },
+                                    "sunroof": {
+                                        "type": "integer",
+                                        "enum": [
+                                            0,
+                                            1
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Car created"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
+        "/seller/cars/{id}": {
+            "get": {
+                "tags": [
+                    "Seller - Cars"
+                ],
+                "summary": "Get car details",
+                "operationId": "47ced5aa6dcde59343a00ae0c67ed555",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Seller - Cars"
+                ],
+                "summary": "Update car details (use _method=PUT in form-data)",
+                "operationId": "6167cc3c5b2ae16ca6548bdf0eb0a02c",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "_method": {
+                                        "type": "string",
+                                        "example": "PUT"
+                                    },
+                                    "category_id": {
+                                        "type": "integer"
+                                    },
+                                    "type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "sale",
+                                            "rent"
+                                        ]
+                                    },
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "year": {
+                                        "type": "integer"
+                                    },
+                                    "brand": {
+                                        "type": "string"
+                                    },
+                                    "color": {
+                                        "type": "string"
+                                    },
+                                    "fuel_type": {
+                                        "type": "string"
+                                    },
+                                    "transmission": {
+                                        "type": "string"
+                                    },
+                                    "doors": {
+                                        "type": "integer"
+                                    },
+                                    "seats": {
+                                        "type": "integer"
+                                    },
+                                    "purchase_price": {
+                                        "type": "number"
+                                    },
+                                    "rental_price_per_day": {
+                                        "type": "number"
+                                    },
+                                    "description": {
+                                        "type": "string"
+                                    },
+                                    "image": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "previous_owners_count": {
+                                        "type": "integer"
+                                    },
+                                    "registration_country": {
+                                        "type": "string"
+                                    },
+                                    "engine_year": {
+                                        "type": "integer"
+                                    },
+                                    "cylinders_count": {
+                                        "type": "integer"
+                                    },
+                                    "drive_system": {
+                                        "type": "string"
+                                    },
+                                    "plate_number": {
+                                        "type": "string"
+                                    },
+                                    "fuel_consumption": {
+                                        "type": "string"
+                                    },
+                                    "warranty": {
+                                        "type": "integer",
+                                        "enum": [
+                                            0,
+                                            1
+                                        ]
+                                    },
+                                    "warranty_duration": {
+                                        "type": "integer"
+                                    },
+                                    "air_conditioning": {
+                                        "type": "integer",
+                                        "enum": [
+                                            0,
+                                            1
+                                        ]
+                                    },
+                                    "airbags": {
+                                        "type": "integer",
+                                        "enum": [
+                                            0,
+                                            1
+                                        ]
+                                    },
+                                    "rear_camera": {
+                                        "type": "integer",
+                                        "enum": [
+                                            0,
+                                            1
+                                        ]
+                                    },
+                                    "bluetooth": {
+                                        "type": "integer",
+                                        "enum": [
+                                            0,
+                                            1
+                                        ]
+                                    },
+                                    "sunroof": {
+                                        "type": "integer",
+                                        "enum": [
+                                            0,
+                                            1
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Car updated"
+                    },
+                    "403": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Seller - Cars"
+                ],
+                "summary": "Delete a car",
+                "operationId": "8d31022d98a8d88ba4fd70ef5b024314",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Car deleted"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
+        "/seller/cars/{id}/toggle-visibility": {
+            "post": {
+                "tags": [
+                    "Seller - Cars"
+                ],
+                "summary": "Hide or show a car",
+                "operationId": "dd91d1eea5e341934baff1d13e91fd02",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Visibility toggled"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
+        "/seller/categories": {
+            "get": {
+                "tags": [
+                    "Seller - Categories"
+                ],
+                "summary": "List all categories",
+                "operationId": "1ae4e1a99927c1df6d6aa68b216bc19a",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
+        "/seller/categories/{id}": {
+            "get": {
+                "tags": [
+                    "Seller - Categories"
+                ],
+                "summary": "Get category details",
+                "operationId": "7e42719c27ac4a5fc3178d5a40c3bc8a",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
+        "/seller/incoming-purchase-requests": {
+            "get": {
+                "tags": [
+                    "Seller - Requests"
+                ],
+                "summary": "List purchase requests for seller's cars",
+                "operationId": "8551a68254c7436df5af2b8f5db38f1e",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
+        "/seller/purchase-requests/{id}/status": {
+            "patch": {
+                "tags": [
+                    "Seller - Requests"
+                ],
+                "summary": "Accept or reject a purchase request",
+                "operationId": "8d55a6b5f086ebc437a6fd174d831245",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "status"
+                                ],
+                                "properties": {
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "accepted",
+                                            "rejected"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Status updated"
+                    },
+                    "403": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
+        "/seller/incoming-rental-requests": {
+            "get": {
+                "tags": [
+                    "Seller - Requests"
+                ],
+                "summary": "List rental requests for seller's cars",
+                "operationId": "0b2c3050e337bad9149cdc0d44feb2ee",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
+        "/seller/rental-requests/{id}/status": {
+            "patch": {
+                "tags": [
+                    "Seller - Requests"
+                ],
+                "summary": "Accept or reject a rental request",
+                "operationId": "d13584d554c388edd3e23de1855118f2",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "status"
+                                ],
+                                "properties": {
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "accepted",
+                                            "rejected"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Status updated"
+                    },
+                    "403": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
         }
     },
     "tags": [
         {
-            "name": "Permissions",
-            "description": "Permissions"
+            "name": "Admin - Stats",
+            "description": "Admin - Stats"
         },
         {
-            "name": "Roles",
-            "description": "Roles"
+            "name": "Admin - Purchase - Requests",
+            "description": "Admin - Purchase - Requests"
         },
         {
-            "name": "Admin - Users",
-            "description": "Admin - Users"
+            "name": "Admin - Rental - Requests",
+            "description": "Admin - Rental - Requests"
+        },
+        {
+            "name": "Admin Auth",
+            "description": "Admin Auth"
+        },
+        {
+            "name": "Admin - Cars",
+            "description": "Admin - Cars"
+        },
+        {
+            "name": "Admin Categories",
+            "description": "Admin Categories"
+        },
+        {
+            "name": "Admin Messages",
+            "description": "Admin Messages"
+        },
+        {
+            "name": "Admin Roles",
+            "description": "Admin Roles"
+        },
+        {
+            "name": "Admin Users",
+            "description": "Admin Users"
         },
         {
             "name": "User - Auth",
             "description": "User - Auth"
+        },
+        {
+            "name": "User - Cars",
+            "description": "User - Cars"
+        },
+        {
+            "name": "User - Categories",
+            "description": "User - Categories"
+        },
+        {
+            "name": "User - Favorites",
+            "description": "User - Favorites"
+        },
+        {
+            "name": "User - Contact Messages",
+            "description": "User - Contact Messages"
+        },
+        {
+            "name": "User - Ratings & Reviews",
+            "description": "User - Ratings & Reviews"
+        },
+        {
+            "name": "User - Requests - Rental",
+            "description": "User - Requests - Rental"
+        },
+        {
+            "name": "Seller - Auth",
+            "description": "Seller - Auth"
+        },
+        {
+            "name": "Seller - Cars",
+            "description": "Seller - Cars"
+        },
+        {
+            "name": "Seller - Categories",
+            "description": "Seller - Categories"
+        },
+        {
+            "name": "Seller - Requests",
+            "description": "Seller - Requests"
         }
     ],
     "components": {

@@ -2,10 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Exports\UserExport;
 use App\Http\Controllers\Controller;
-use App\Http\Resources\AddressResource;
-use App\Http\Resources\ProductResource;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
@@ -15,104 +12,52 @@ use App\Models\User;
 use Spatie\Permission\Models\Role;
 
 use App\Http\Resources\UserResource;
-use App\Models\Address;
-use App\Models\Favorite;
-use App\Models\FCMToken;
-use App\Models\Product;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
-use Maatwebsite\Excel\Facades\Excel;
 
 class UserController extends Controller
 {
     public function __construct()
     {
         $this->middleware('auth:sanctum');
-        $this->middleware('permission:users.read|users.write|users.delete')->only('index', 'show', 'export', 'get_user_favorites', 'get_user_address');
+        $this->middleware('permission:users.read|users.write|users.delete')->only('index', 'show');
         $this->middleware('permission:users.write')->only('store', 'update', 'reset_password', 'user_status_toggle');
         $this->middleware('permission:users.delete')->only('destroy');
     }
- 
+
     /**
      * @OA\Get(
      *   path="/admin/users",
      *   description="Get all users",
-     *   @OA\Parameter(
-     *     in="query",
-     *     name="q",
-     *     required=false,
-     *     @OA\Schema(type="string"),
-     *   ),
-     *   @OA\Parameter(
-     *     in="query",
-     *     name="role_id",
-     *     required=false,
-     *     @OA\Schema(type="string"),
-     *   ),
-     * @OA\Parameter(
-     *     in="query",
-     *     name="status",
-     *     required=false,
-     *     @OA\Schema(type="integer",enum={0, 1})
-     *   ),
-     * @OA\Parameter(
-     *     in="query",
-     *     name="start_date",
-     *     required=false,
-     *     @OA\Schema(type="date")
-     *   ),
-     * @OA\Parameter(
-     *     in="query",
-     *     name="end_date",
-     *     required=false,
-     *     @OA\Schema(type="date")
-     *   ),
-     * @OA\Parameter(
-     *     in="query",
-     *     name="type",
-     *     required=false,
-     *     @OA\Schema(type="string",enum={"employee"})
-     *   ),
-     * @OA\Parameter(
-     *     in="query",
-     *     name="with_paginate",
-     *     required=false,
-     *     @OA\Schema(type="integer",enum={0, 1})
-     *   ),
-     *   @OA\Parameter(
-     *     in="query",
-     *     name="per_page",
-     *     required=false,
-     *     @OA\Schema(type="integer"),
-     *   ),
+     *   @OA\Parameter(in="query", name="search", required=false, @OA\Schema(type="string")),
+     *   @OA\Parameter(in="query", name="role_id", required=false, @OA\Schema(type="integer")),
+     *   @OA\Parameter(in="query", name="is_active", required=false, @OA\Schema(type="integer",enum={0, 1})),
+     *   @OA\Parameter(in="query", name="start_date", required=false, @OA\Schema(type="date")),
+     *   @OA\Parameter(in="query", name="end_date", required=false, @OA\Schema(type="date")),
+     *   @OA\Parameter(in="query", name="with_paginate", required=false, @OA\Schema(type="integer",enum={0, 1})),
+     *   @OA\Parameter(in="query", name="per_page", required=false, @OA\Schema(type="integer")),
      *   operationId="get_users",
      *   security={{"bearer_token": {} }},
-     *   tags={"Admin - Users"},
-     *   @OA\Response(
-     *     response=200,
-     *     description="Success",
-     *   ),
+     *   tags={"Admin Users"},
+     *   @OA\Response(response=200, description="Success"),
      * )
     */
     public function index(Request $request)
     {
         $request->validate([
-            'q'                   => ['string'],
-            'role_id'             => ['exists:roles,id'],
-            'status'              => ['integer', 'in:1,0'],
-            'start_date'          => ['date_format:Y-m-d'],
-            'end_date'            => ['date_format:Y-m-d'],
-            'type'                => ['in:employee'],
-            'with_paginate'       => ['integer', 'in:0,1'],
-            'per_page'            => ['integer', 'min:1']
+            'search'              => ['nullable', 'string'],
+            'role_id'             => ['nullable', 'exists:roles,id'],
+            'is_active'           => ['nullable', 'integer', 'in:1,0'],
+            'start_date'          => ['nullable', 'date_format:Y-m-d'],
+            'end_date'            => ['nullable', 'date_format:Y-m-d'],
+            'with_paginate'       => ['nullable', 'integer', 'in:0,1'],
+            'per_page'            => ['nullable', 'integer', 'min:1']
         ]);
 
         $q = User::query();
 
-        if($request->status === '0'){
-            $q->where('status', false);
-        }else if ($request->status === '1') {
-            $q->where('status', true);
+        if($request->has('is_active')){
+            $q->where('is_active', $request->is_active);
         }
 
         if($request->start_date)
@@ -120,31 +65,22 @@ class UserController extends Controller
         if($request->end_date)
             $q->where('created_at','<=', $request->end_date);
 
-        if ($request->q) {
+        if ($request->search) {
             $q->where(function ($query) use ($request) {
-                $query->where('name', 'like', '%' . $request->q . '%')
-                        ->orWhere('email', 'like', '%' . $request->q . '%')
-                        ->orWhere('phone', 'like', '%' . $request->q . '%')
-                        ->orWhere('id', $request->q);
+                $query->where('name', 'like', '%' . $request->search . '%')
+                        ->orWhere('email', 'like', '%' . $request->search . '%')
+                        ->orWhere('phone', 'like', '%' . $request->search . '%')
+                        ->orWhere('id', $request->search);
             });
         }
         
         if($request->role_id){
-            $user_ids = DB::table('model_has_roles')->where('model_type', User::class)
-                            ->where('role_id', $request->role_id)->pluck('model_id');
-            $q->whereIn('id', $user_ids);
+            $q->where('role_id', $request->role_id);
         }
 
-        if($request->type == 'employee'){
-            $user_ids = DB::table('model_has_roles')->where('model_type', User::class)
-                        ->whereNotIn('role_id', [2, 3])->pluck('model_id');
-            $q->whereIn('id', $user_ids);
-        }
-
-        if ($request->with_paginate === '0')
-            $user = $q->with('permissions')->get();
-        else
-            $user = $q->with('permissions')->paginate($request->per_page ?? 10);
+        $user = ($request->with_paginate === '0')
+            ? $q->with('roleModel')->get()
+            : $q->with('roleModel')->paginate($request->per_page ?? 10);
 
         return UserResource::collection($user);
     }
@@ -152,7 +88,7 @@ class UserController extends Controller
     /**
      * @OA\Post(
      * path="/admin/users",
-     * tags={"Admin - Users"},
+     * tags={"Admin Users"},
      * security={{"bearer_token": {} }},
      * description="Create new user.",
      * operationId="CreateUser",
@@ -161,60 +97,55 @@ class UserController extends Controller
      *       @OA\MediaType(
      *           mediaType="multipart/form-data",
      *           @OA\Schema(
-     *              required={"name","email","password","role_id"},
+     *              required={"name","email","password","phone","role_id"},
      *              @OA\Property(property="name", type="string"),
      *              @OA\Property(property="email",format="email", type="string"),
      *              @OA\Property(property="password", type="string"),
      *              @OA\Property(property="password_confirmation", type="string"),
-     *              @OA\Property(property="phone_country_id", type="integer"),
      *              @OA\Property(property="phone", type="string"),
-     *              @OA\Property(property="country_id", type="integer"),
-     *              @OA\Property(property="summary", type="string"),
-     *              @OA\Property(property="image", type="file"),
+     *              @OA\Property(property="birth_date", type="string", format="date"),
+     *              @OA\Property(property="address", type="string"),
+     *              @OA\Property(property="license_number", type="string"),
+     *              @OA\Property(property="license_expiry_date", type="string", format="date"),
+     *              @OA\Property(property="business_type", type="string"),
      *              @OA\Property(property="role_id", type="integer"),
      *           )
      *       )
      *   ),
-     * @OA\Response(
-     *     response=200,
-     *     description="successful operation",
-     *  ),
-     *  )
+     * @OA\Response(response=200, description="successful operation"),
+     * )
     */
     public function store(Request $request)
     {
         $request->validate([
             'name'              => ['required', 'string'],
             'email'             => ['required', 'string', 'email', 'unique:users'],
-            'phone_country_id'  => ['integer', 'exists:countries,id'],
-            'phone'             => ['required', 'unique:users'],
             'password'          => ['required', 'string', 'min:6', 'confirmed'],
-            'country_id'        => ['integer', 'exists:countries,id'],
-            'summary'           => ['string'],
-            'image'             => ['image'],
-            'role_id'           => ['required', 'integer', 'exists:roles,id']
+            'phone'             => ['required', 'unique:users'],
+            'role_id'           => ['required', 'integer', 'exists:roles,id'],
+            'birth_date'        => ['nullable', 'date'],
+            'address'           => ['nullable', 'string'],
+            'license_number'    => ['nullable', 'string'],
+            'license_expiry_date' => ['nullable', 'date'],
+            'business_type'     => ['nullable', 'string'],
         ]);
-
-        $verified = null;
-        if(in_array($request->role_id, [2, 3]))
-            $verified = now();
-
-        $image = null;
-        if($request->image)
-            $image = upload_file($request->image, 'users', 'user');
 
         $user = User::create([
             'name'               => $request->name,
             'email'              => $request->email,
-            'phone_country_id'   => $request->phone_country_id,
             'phone'              => $request->phone,
-            'country_id'         => $request->country_id,
-            'summary'            => $request->summary,
             'password'           => Hash::make($request->password),
-            'email_verified_at'  => $verified,
-            'image'              => $image,
+            'birth_date'         => $request->birth_date,
+            'address'            => $request->address,
+            'license_number'     => $request->license_number,
+            'license_expiry_date' => $request->license_expiry_date,
+            'business_type'      => $request->business_type,
+            'role_id'            => $request->role_id,
+            'is_active'          => true,
+            'email_verified_at'  => now(),
         ]);
-        $role_name = Role::find($request->role_id)->name;
+        
+        $role_name = \Spatie\Permission\Models\Role::find($request->role_id)->name;
         $user->assignRole($role_name);
 
         return response()->json(new UserResource($user));
@@ -224,19 +155,11 @@ class UserController extends Controller
      * @OA\Get(
      *   path="/admin/users/{id}",
      *   description="Get specific user",
-     *   @OA\Parameter(
-     *     in="path",
-     *     name="id",
-     *     required=true,
-     *     @OA\Schema(type="string"),
-     *   ),
+     *   @OA\Parameter(in="path", name="id", required=true, @OA\Schema(type="string")),
      *   operationId="show_user",
-     *   tags={"Admin - Users"},
+     *   tags={"Admin Users"},
      *   security={{"bearer_token": {} }},
-     *   @OA\Response(
-     *     response=200,
-     *     description="Success"
-     *   ),
+     *   @OA\Response(response=200, description="Success"),
      * )
     */
     public function show(User $user)
@@ -248,13 +171,8 @@ class UserController extends Controller
      * @OA\Post(
      *   path="/admin/users/{id}",
      *   description="Edit user",
-     *   @OA\Parameter(
-     *     in="path",
-     *     name="id",
-     *     required=true,
-     *     @OA\Schema(type="string"),
-     *   ),
-     *   tags={"Admin - Users"},
+     *   @OA\Parameter(in="path", name="id", required=true, @OA\Schema(type="string")),
+     *   tags={"Admin Users"},
      *   operationId="edit_user",
      *   security={{"bearer_token": {} }},
      *   @OA\RequestBody(
@@ -262,23 +180,20 @@ class UserController extends Controller
      *     @OA\MediaType(
      *       mediaType="multipart/form-data",
      *       @OA\Schema(
-     *              required={"name","email","phone","role_id"},
      *              @OA\Property(property="name", type="string"),
      *              @OA\Property(property="email",format="email", type="string"),
-     *              @OA\Property(property="phone_country_id", type="integer"),
      *              @OA\Property(property="phone", type="string"),
-     *              @OA\Property(property="country_id", type="integer"),
-     *              @OA\Property(property="summary", type="string"),
-     *              @OA\Property(property="image", type="file"),
+     *              @OA\Property(property="birth_date", type="string", format="date"),
+     *              @OA\Property(property="address", type="string"),
+     *              @OA\Property(property="license_number", type="string"),
+     *              @OA\Property(property="license_expiry_date", type="string", format="date"),
+     *              @OA\Property(property="business_type", type="string"),
      *              @OA\Property(property="role_id", type="integer"),
-     *         @OA\Property(property="_method", type="string", format="string", example="PUT"),
+     *              @OA\Property(property="_method", type="string", format="string", example="PUT"),
      *       )
      *     )
      *   ),
-     *   @OA\Response(
-     *     response="200",
-     *     description="Success"
-     *   ),
+     *   @OA\Response(response="200", description="Success"),
      * )
     */
     public function update(Request $request, User $user)
@@ -286,42 +201,26 @@ class UserController extends Controller
         $request->validate([
             'name'                  => ['required', 'string'],
             'email'                 => ['required', 'string', 'email', Rule::unique('users', 'email')->ignore($user->id)],
-            'phone_country_id'      => ['integer', 'exists:countries,id'],
             'phone'                 => ['required', Rule::unique('users', 'phone')->ignore($user->id)],
-            'country_id'            => ['integer', 'exists:countries,id'],
-            'summary'               => ['string'],
-            'image'                 => [''],
             'role_id'               => ['exists:roles,id'],
+            'birth_date'            => ['nullable', 'date'],
+            'address'               => ['nullable', 'string'],
+            'license_number'        => ['nullable', 'string'],
+            'license_expiry_date'   => ['nullable', 'date'],
+            'business_type'         => ['nullable', 'string'],
         ]);
 
-        $role_name = $request->role_id?Role::find($request->role_id)->name:$user->role();
-
-        $image = null;
-        if($request->image){
-            if($request->image == $user->image){
-                $image = $user->image;
-            }else{
-                if(!is_file($request->image))
-                    throw ValidationException::withMessages(['image' => __('Image should be a file')]);
-                $image = upload_file($request->image, 'users', 'user');
-            }
-        }
-
-        $user->name = $request->name;
-        $user->email = $request->email;
-        $user->phone_country_id = $request->phone_country_id;
-        $user->phone = $request->phone;
-        $user->country_id = $request->country_id;
-        $user->summary = $request->summary;
-        $user->image = $image;
+        $user->update($request->only([
+            'name', 'email', 'phone', 'role_id', 'birth_date', 'address', 'license_number', 'license_expiry_date', 'business_type'
+        ]));
 
         if($request->password){
             $user->password = Hash::make($request->password);
+            $user->save();
         }
 
-        $user->save();
-
         if($request->role_id){
+            $role_name = \Spatie\Permission\Models\Role::find($request->role_id)->name;
             $user->syncRoles($role_name);
         }
 
@@ -332,19 +231,11 @@ class UserController extends Controller
      * @OA\Delete(
      *   path="/admin/users/{id}",
      *   description="Delete user",
-     *   @OA\Parameter(
-     *     in="path",
-     *     name="id",
-     *     required=true,
-     *     @OA\Schema(type="string"),
-     *   ),
+     *   @OA\Parameter(in="path", name="id", required=true, @OA\Schema(type="string")),
      *   operationId="delete_user",
-     *   tags={"Admin - Users"},
+     *   tags={"Admin Users"},
      *   security={{"bearer_token": {} }},
-     *   @OA\Response(
-     *     response=200,
-     *     description="Success"
-     *   )
+     *   @OA\Response(response=200, description="Success")
      * )
     */
     public function destroy(User $user)
@@ -358,13 +249,8 @@ class UserController extends Controller
      * @OA\Post(
      * path="/admin/users/{id}/reset_password",
      * description="reset user password.",
-     *   @OA\Parameter(
-     *     in="path",
-     *     name="id",
-     *     required=true,
-     *     @OA\Schema(type="string"),
-     *   ),
-     * tags={"Admin - Users"},
+     *   @OA\Parameter(in="path", name="id", required=true, @OA\Schema(type="string")),
+     * tags={"Admin Users"},
      * security={{"bearer_token": {} }},
      *   @OA\RequestBody(
      *     required=true,
@@ -377,11 +263,7 @@ class UserController extends Controller
      *       )
      *     )
      *   ),
-     * @OA\Response(
-     *    response=200,
-     *    description="successful operation",
-     *     ),
-     * )
+     * @OA\Response(response=200, description="successful operation"),
      * )
     */
     public function reset_password(Request $request, User $user)
@@ -397,27 +279,18 @@ class UserController extends Controller
      * @OA\Post(
      * path="/admin/users/{id}/activate",
      * description="activate the user.",
-     *   @OA\Parameter(
-     *     in="path",
-     *     name="id",
-     *     required=true,
-     *     @OA\Schema(type="string"),
-     *   ),
-     * tags={"Admin - Users"},
+     *   @OA\Parameter(in="path", name="id", required=true, @OA\Schema(type="string")),
+     * tags={"Admin Users"},
      * security={{"bearer_token": {} }},
-     * @OA\Response(
-     *    response=200,
-     *    description="successful operation",
-     *     ),
-     * )
+     * @OA\Response(response=200, description="successful operation"),
      * )
     */
     public function user_status_toggle(User $user)
     {
-        if($user->status)
+        if($user->is_active)
             DB::table('personal_access_tokens')->where('tokenable_id', $user->id)->delete();
 
-        $user->update(['status' => !$user->status]);
+        $user->update(['is_active' => !$user->is_active]);
         return response()->json(new UserResource($user), 200);
     }
 }

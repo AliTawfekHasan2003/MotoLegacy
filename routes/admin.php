@@ -1,6 +1,10 @@
 <?php
 
-use Illuminate\Http\Request;
+use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\AuthController as AdminAuthController;
+use App\Http\Controllers\Admin\CarController;
+use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\MessageController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
@@ -8,21 +12,43 @@ use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| API Routes
+| Admin Routes  (prefix: api/admin)
 |--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "api" middleware group. Make something great!
-|
 */
 
-// roles and permissions
-Route::get('/permissions', [PermissionController::class, 'get_all_permissions']);
-Route::get('/permissions/me', [PermissionController::class, 'my_permissions']);
-Route::get('/roles/{role}/permissions', [PermissionController::class, 'get_permissions']);
-Route::post('/roles/{role}/permissions', [PermissionController::class, 'set_permissions']);
-Route::apiResource('roles', RoleController::class);
+// ─── Auth (public) ────────────────────────────────────────────────────────
+Route::post('login', [AdminAuthController::class, 'login']);
 
-// users
-Route::apiResource('users' , UserController::class);
+// ─── Authenticated admin routes ───────────────────────────────────────────
+Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
+
+    // Profile / Auth
+    Route::post('logout', [AdminAuthController::class, 'logout']);
+    Route::get('profile', [AdminAuthController::class, 'get_profile']);
+
+    // Dashboard
+    Route::get('stats', [AdminController::class, 'stats']);
+
+    // Categories
+    Route::apiResource('categories', CategoryController::class);
+
+    // Messages
+    Route::get('messages', [MessageController::class, 'index']);
+
+    // Requests
+    Route::get('purchase-requests', [AdminController::class, 'purchaseRequests']);
+    Route::get('rental-requests',   [AdminController::class, 'rentalRequests']);
+
+    // Roles
+    Route::apiResource('roles', RoleController::class);
+
+    Route::get('cars',                      [CarController::class, 'index']);
+    Route::get('cars/{car}',                [CarController::class, 'show']);
+    Route::patch('cars/{car}/approval',                [CarController::class, 'approveCar']);
+
+
+    // Users
+    Route::apiResource('users', UserController::class);
+    Route::post('users/{user}/reset_password', [UserController::class, 'reset_password']);
+    Route::post('users/{user}/activate',       [UserController::class, 'user_status_toggle']);
+});
