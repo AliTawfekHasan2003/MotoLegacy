@@ -22,7 +22,8 @@ class CarController extends Controller
      *     security={{"bearer_token":{}}},
      *     summary="List all visible cars with optional filters",
      *     @OA\Parameter(name="brand", in="query", @OA\Schema(type="string")),
-     *     @OA\Parameter(name="type", in="query", @OA\Schema(type="string", enum={"sale","rent"})),
+     *     @OA\Parameter(name="type", in="query", @OA\Schema(type="string", enum={"pending","approved", "rejected"})),
+     *     @OA\Parameter(name="approval_status", in="query", @OA\Schema(type="string", enum={"sale","rent"})),
      *     @OA\Parameter(name="year", in="query", @OA\Schema(type="integer")),
      *     @OA\Parameter(name="min_price", in="query", @OA\Schema(type="number")),
      *     @OA\Parameter(name="max_price", in="query", @OA\Schema(type="number")),
@@ -44,6 +45,11 @@ class CarController extends Controller
         if ($request->has('year')) {
             $query->where('year', $request->year);
         }
+
+        if ($request->has('approval_status')) {
+            $query->where('approval_status', $request->approval_status);
+        }
+
         if ($request->has('min_price')) {
             $query->where(function ($q) use ($request) {
                 $q->where('purchase_price', '>=', $request->min_price)

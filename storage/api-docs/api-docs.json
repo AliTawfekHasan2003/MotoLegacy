@@ -175,6 +175,18 @@
                         "schema": {
                             "type": "string",
                             "enum": [
+                                "pending",
+                                "approved",
+                                "rejected"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "approval_status",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
                                 "sale",
                                 "rent"
                             ]
