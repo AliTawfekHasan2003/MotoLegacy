@@ -35,7 +35,7 @@ class UserSeeder extends Seeder
             'password'          => Hash::make('password'),
             'email_verified_at' => now(),
         ]);
-        $user_1->assignRole('user');
+        $user_1->assignRole('seller');
 
         $user_2 = User::create([
             'id'                => 3,

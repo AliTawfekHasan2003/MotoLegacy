@@ -32,9 +32,8 @@ class CarController extends Controller
      */
     public function index(Request $request)
     {
-        $user = to_user(Auth::user());
 
-        $query = Car::where('user_id', $user->id)->with(['owner', 'category'])->where('status', '!=', 'hidden');
+        $query = Car::with(['owner', 'category'])->where('status', '!=', 'hidden');
 
         if ($request->has('brand')) {
             $query->where('brand', 'like', '%' . $request->brand . '%');
