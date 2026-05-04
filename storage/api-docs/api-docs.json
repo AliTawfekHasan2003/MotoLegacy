@@ -170,7 +170,7 @@
                         }
                     },
                     {
-                        "name": "type",
+                        "name": "approval_status",
                         "in": "query",
                         "schema": {
                             "type": "string",
@@ -182,7 +182,7 @@
                         }
                     },
                     {
-                        "name": "approval_status",
+                        "name": "type",
                         "in": "query",
                         "schema": {
                             "type": "string",
