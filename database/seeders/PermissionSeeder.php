@@ -19,7 +19,12 @@ class PermissionSeeder extends Seeder
 
         // Permissions
         $permissions = [
-            'users.manage',
+            'roles.read',
+            'roles.write',
+            'roles.delete',
+            'users.read',
+            'users.write',
+            'users.delete',       
             'cars.read',
             'cars.create',
             'cars.update',

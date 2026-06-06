@@ -79,8 +79,8 @@ class UserController extends Controller
         }
 
         $user = ($request->with_paginate === '0')
-            ? $q->with('roleModel')->get()
-            : $q->with('roleModel')->paginate($request->per_page ?? 10);
+            ? $q->with(['roleModel', 'roles'])->get()
+            : $q->with(['roleModel', 'roles'])->paginate($request->per_page ?? 10);
 
         return UserResource::collection($user);
     }
@@ -164,6 +164,8 @@ class UserController extends Controller
     */
     public function show(User $user)
     {
+        $user->load(['roleModel', 'roles']);
+
         return response()->json(new UserResource($user));
     }
 

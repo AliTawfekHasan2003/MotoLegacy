@@ -14,6 +14,9 @@ class UserResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $role = $this->roleModel
+            ?? ($this->relationLoaded('roles') ? $this->roles->first() : $this->roles()->first());
+
         return [
             'id'                => $this->id, 
             'name'              => $this->name, 
@@ -25,8 +28,10 @@ class UserResource extends JsonResource
             'license_number'    => $this->license_number,
             'license_expiry_date' => $this->license_expiry_date,
             'business_type'     => $this->business_type,
-            'role_id'           => $this->role_id,
-            'role_name'         => $this->roleModel?->name,
+            'role'              => $role ? [
+                'id'   => $role->id,
+                'name' => $role->name,
+            ] : null,
             'created_at'        => $this->created_at,
             'updated_at'        => $this->updated_at,
         ];
