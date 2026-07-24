@@ -7,7 +7,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 
-use App\Models\VerificationCode;
 use App\Models\User;
 
 use App\Http\Resources\UserResource;

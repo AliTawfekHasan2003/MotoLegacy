@@ -15,6 +15,9 @@ use Illuminate\Support\Facades\Route;
 // ─── Auth (public – no sanctum needed) ───────────────────────────────────
 Route::post('register', [SellerAuthController::class, 'register']);
 Route::post('login',    [SellerAuthController::class, 'login']);
+Route::post('forgot-password', [\App\Http\Controllers\PasswordResetController::class, 'forgotPassword']);
+Route::post('verify-otp',      [\App\Http\Controllers\PasswordResetController::class, 'verifyOtp']);
+Route::post('reset-password',  [\App\Http\Controllers\PasswordResetController::class, 'resetPassword']);
 
 
 // ─── Authenticated seller routes ─────────────────────────────────────────

@@ -1393,6 +1393,129 @@
                 }
             }
         },
+        "/forgot-password": {
+            "post": {
+                "tags": [
+                    "Auth - Password Reset"
+                ],
+                "summary": "Send OTP to email for password reset",
+                "operationId": "34480c59d781133bea32fbb271ac5a0d",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "email"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OTP sent if email exists"
+                    }
+                }
+            }
+        },
+        "/verify-otp": {
+            "post": {
+                "tags": [
+                    "Auth - Password Reset"
+                ],
+                "summary": "Verify password reset OTP",
+                "operationId": "e93dfba39daa944a08ca2dcd791dd986",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "otp"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "otp": {
+                                        "type": "string",
+                                        "example": "123456"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OTP verified"
+                    },
+                    "422": {
+                        "description": "Invalid or expired OTP"
+                    }
+                }
+            }
+        },
+        "/reset-password": {
+            "post": {
+                "tags": [
+                    "Auth - Password Reset"
+                ],
+                "summary": "Reset password using email OTP",
+                "operationId": "a4375fe701211a54d072049f7a0b1bd9",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "otp",
+                                    "password",
+                                    "password_confirmation"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "otp": {
+                                        "type": "string",
+                                        "example": "123456"
+                                    },
+                                    "password": {
+                                        "type": "string"
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Password reset successfully"
+                    },
+                    "422": {
+                        "description": "Invalid or expired OTP"
+                    }
+                }
+            }
+        },
         "/ratings/{seller_id}": {
             "get": {
                 "tags": [
@@ -2030,6 +2153,28 @@
                                         "type": "string",
                                         "format": "binary"
                                     },
+                                    "gallery[]": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "format": "binary"
+                                        }
+                                    },
+                                    "ownership_document": {
+                                        "description": "Car ownership / registration document",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "insurance_document": {
+                                        "description": "Insurance document",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "inspection_document": {
+                                        "description": "Technical inspection document",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
                                     "previous_owners_count": {
                                         "type": "integer"
                                     },
@@ -2215,6 +2360,28 @@
                                         "type": "string",
                                         "format": "binary"
                                     },
+                                    "gallery[]": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "format": "binary"
+                                        }
+                                    },
+                                    "ownership_document": {
+                                        "description": "Car ownership / registration document",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "insurance_document": {
+                                        "description": "Insurance document",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "inspection_document": {
+                                        "description": "Technical inspection document",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
                                     "previous_owners_count": {
                                         "type": "integer"
                                     },
@@ -2320,6 +2487,112 @@
                 "responses": {
                     "204": {
                         "description": "Car deleted"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
+        "/seller/cars/{id}/gallery": {
+            "post": {
+                "tags": [
+                    "Seller - Cars"
+                ],
+                "summary": "Add images to car gallery",
+                "operationId": "d2b6af55c43f3e11ad94765b827e9c65",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "gallery[]"
+                                ],
+                                "properties": {
+                                    "gallery[]": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "format": "binary"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Gallery images added"
+                    },
+                    "403": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Seller - Cars"
+                ],
+                "summary": "Remove an image from car gallery by URL",
+                "operationId": "50fc0681fa657063a49c75014fc9e3e3",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "url"
+                                ],
+                                "properties": {
+                                    "url": {
+                                        "type": "string",
+                                        "example": "http://localhost/storage/cars/gallery/example.jpg"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Gallery image removed"
+                    },
+                    "404": {
+                        "description": "Image not found in gallery"
+                    },
+                    "403": {
+                        "description": "Unauthorized"
                     }
                 },
                 "security": [
@@ -2609,6 +2882,10 @@
         {
             "name": "User - Contact Messages",
             "description": "User - Contact Messages"
+        },
+        {
+            "name": "Auth - Password Reset",
+            "description": "Auth - Password Reset"
         },
         {
             "name": "User - Ratings & Reviews",

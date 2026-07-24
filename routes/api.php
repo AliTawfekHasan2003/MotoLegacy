@@ -6,6 +6,7 @@ use App\Http\Controllers\CarController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\MessageController;
+use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\RatingController;
 use App\Http\Controllers\RequestController;
 
@@ -18,6 +19,9 @@ use App\Http\Controllers\RequestController;
 // ─── Auth (public) ────────────────────────────────────────────────────────
 Route::post('login',          [AuthController::class, 'login']);
 Route::post('register',       [AuthController::class, 'register']);
+Route::post('forgot-password',[PasswordResetController::class, 'forgotPassword']);
+Route::post('verify-otp',     [PasswordResetController::class, 'verifyOtp']);
+Route::post('reset-password', [PasswordResetController::class, 'resetPassword']);
 
 // ─── Authenticated user routes ────────────────────────────────────────────
 Route::middleware('auth:sanctum')->group(function () {
