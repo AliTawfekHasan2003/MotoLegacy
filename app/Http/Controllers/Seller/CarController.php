@@ -37,6 +37,10 @@ class CarController extends Controller
      *                 @OA\Property(property="rental_price_per_day", type="number"),
      *                 @OA\Property(property="description", type="string"),
      *                 @OA\Property(property="image", type="string", format="binary"),
+     *                 @OA\Property(property="gallery[]", type="array", @OA\Items(type="string", format="binary")),
+     *                 @OA\Property(property="ownership_document", type="string", format="binary", description="Car ownership / registration document"),
+     *                 @OA\Property(property="insurance_document", type="string", format="binary", description="Insurance document"),
+     *                 @OA\Property(property="inspection_document", type="string", format="binary", description="Technical inspection document"),
      *                 @OA\Property(property="previous_owners_count", type="integer"),
      *                 @OA\Property(property="registration_country", type="string"),
      *                 @OA\Property(property="engine_year", type="integer"),
@@ -73,6 +77,11 @@ class CarController extends Controller
             'purchase_price'       => 'required_if:type,sale|nullable|numeric',
             'rental_price_per_day' => 'required_if:type,rent|nullable|numeric',
             'image'                => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
+            'gallery'              => 'nullable|array',
+            'gallery.*'            => 'image|mimes:jpeg,png,jpg,webp|max:5120',
+            'ownership_document'   => 'nullable|file|mimes:jpeg,png,jpg,webp,pdf|max:10240',
+            'insurance_document'   => 'nullable|file|mimes:jpeg,png,jpg,webp,pdf|max:10240',
+            'inspection_document'  => 'nullable|file|mimes:jpeg,png,jpg,webp,pdf|max:10240',
             'previous_owners_count'=> 'nullable|integer',
             'registration_country' => 'nullable|string',
             'engine_year'          => 'nullable|integer',
@@ -89,12 +98,21 @@ class CarController extends Controller
             'warranty_duration'    => 'nullable|integer',
         ]);
 
-        $data = $request->except('image');
+        $data = $request->except([
+            'image',
+            'gallery',
+            'ownership_document',
+            'insurance_document',
+            'inspection_document',
+        ]);
 
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store('cars/images', 'public');
             $data['image'] = Storage::disk('public')->url($path);
         }
+
+        $data['gallery'] = $this->storeGalleryFiles($request->file('gallery', []));
+        $data = array_merge($data, $this->storeDocumentFiles($request));
 
         $car = Auth::user()->cars()->create($data);
 
@@ -128,6 +146,10 @@ class CarController extends Controller
      *                 @OA\Property(property="rental_price_per_day", type="number"),
      *                 @OA\Property(property="description", type="string"),
      *                 @OA\Property(property="image", type="string", format="binary"),
+     *                 @OA\Property(property="gallery[]", type="array", @OA\Items(type="string", format="binary")),
+     *                 @OA\Property(property="ownership_document", type="string", format="binary", description="Car ownership / registration document"),
+     *                 @OA\Property(property="insurance_document", type="string", format="binary", description="Insurance document"),
+     *                 @OA\Property(property="inspection_document", type="string", format="binary", description="Technical inspection document"),
      *                 @OA\Property(property="previous_owners_count", type="integer"),
      *                 @OA\Property(property="registration_country", type="string"),
      *                 @OA\Property(property="engine_year", type="integer"),
@@ -167,6 +189,9 @@ class CarController extends Controller
             'purchase_price'       => 'nullable|numeric',
             'rental_price_per_day' => 'nullable|numeric',
             'image'                => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
+            'ownership_document'   => 'nullable|file|mimes:jpeg,png,jpg,webp,pdf|max:10240',
+            'insurance_document'   => 'nullable|file|mimes:jpeg,png,jpg,webp,pdf|max:10240',
+            'inspection_document'  => 'nullable|file|mimes:jpeg,png,jpg,webp,pdf|max:10240',
             'previous_owners_count'=> 'nullable|integer',
             'registration_country' => 'nullable|string',
             'engine_year'          => 'nullable|integer',
@@ -184,19 +209,106 @@ class CarController extends Controller
             'warranty_duration'    => 'nullable|integer',
         ]);
 
-        $data = $request->except(['image', '_method']);
+        $data = $request->except([
+            'image',
+            'gallery',
+            'ownership_document',
+            'insurance_document',
+            'inspection_document',
+            '_method',
+        ]);
 
         if ($request->hasFile('image')) {
             if ($car->image) {
-                $oldPath = str_replace(Storage::disk('public')->url(''), '', $car->image);
-                Storage::disk('public')->delete($oldPath);
+                $this->deleteStoredFile($car->image);
             }
 
             $path = $request->file('image')->store('cars/images', 'public');
             $data['image'] = Storage::disk('public')->url($path);
         }
 
+        $data = array_merge($data, $this->storeDocumentFiles($request, $car));
+
         $car->update($data);
+
+        return new CarResource($car->load('owner', 'category'));
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/seller/cars/{id}/gallery",
+     *     tags={"Seller - Cars"},
+     *     summary="Add images to car gallery",
+     *     security={{"bearer_token":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\MediaType(
+     *             mediaType="multipart/form-data",
+     *             @OA\Schema(
+     *                 required={"gallery[]"},
+     *                 @OA\Property(property="gallery[]", type="array", @OA\Items(type="string", format="binary")),
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Gallery images added"),
+     *     @OA\Response(response=403, description="Unauthorized"),
+     * )
+     */
+    public function addGalleryImages(Request $request, Car $car)
+    {
+        $this->authorize('update', $car);
+
+        $request->validate([
+            'gallery'   => 'required|array|min:1',
+            'gallery.*' => 'image|mimes:jpeg,png,jpg,webp|max:5120',
+        ]);
+
+        $existing = $car->gallery ?? [];
+        $newUrls = $this->storeGalleryFiles($request->file('gallery', []));
+        $car->update(['gallery' => array_values(array_merge($existing, $newUrls))]);
+
+        return new CarResource($car->load('owner', 'category'));
+    }
+
+    /**
+     * @OA\Delete(
+     *     path="/seller/cars/{id}/gallery",
+     *     tags={"Seller - Cars"},
+     *     summary="Remove an image from car gallery by URL",
+     *     security={{"bearer_token":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"url"},
+     *             @OA\Property(property="url", type="string", example="http://localhost/storage/cars/gallery/example.jpg")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Gallery image removed"),
+     *     @OA\Response(response=404, description="Image not found in gallery"),
+     *     @OA\Response(response=403, description="Unauthorized"),
+     * )
+     */
+    public function removeGalleryImage(Request $request, Car $car)
+    {
+        $this->authorize('update', $car);
+
+        $request->validate([
+            'url' => 'required|string',
+        ]);
+
+        $gallery = $car->gallery ?? [];
+        $url = $request->url;
+
+        if (!in_array($url, $gallery, true)) {
+            return response()->json(['message' => 'Image not found in gallery'], 404);
+        }
+
+        $this->deleteStoredFile($url);
+        $car->update([
+            'gallery' => array_values(array_filter($gallery, fn ($item) => $item !== $url)),
+        ]);
 
         return new CarResource($car->load('owner', 'category'));
     }
@@ -215,10 +327,18 @@ class CarController extends Controller
     {
         $this->authorize('delete', $car);
 
-        // Delete image from storage if exists
         if ($car->image) {
-            $oldPath = str_replace(Storage::disk('public')->url(''), '', $car->image);
-            Storage::disk('public')->delete($oldPath);
+            $this->deleteStoredFile($car->image);
+        }
+
+        foreach ($car->gallery ?? [] as $url) {
+            $this->deleteStoredFile($url);
+        }
+
+        foreach (['ownership_document', 'insurance_document', 'inspection_document'] as $field) {
+            if ($car->{$field}) {
+                $this->deleteStoredFile($car->{$field});
+            }
         }
 
         $car->delete();
@@ -305,5 +425,58 @@ class CarController extends Controller
     public function show(Car $car)
     {
         return new CarResource($car->load('owner', 'category'));
+    }
+
+    /**
+     * @param  array<\Illuminate\Http\UploadedFile>|null  $files
+     * @return array<int, string>
+     */
+    private function storeGalleryFiles(?array $files): array
+    {
+        $urls = [];
+
+        foreach ($files ?? [] as $file) {
+            if (!$file) {
+                continue;
+            }
+
+            $path = $file->store('cars/gallery', 'public');
+            $urls[] = Storage::disk('public')->url($path);
+        }
+
+        return $urls;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function storeDocumentFiles(Request $request, ?Car $car = null): array
+    {
+        $data = [];
+
+        foreach (['ownership_document', 'insurance_document', 'inspection_document'] as $field) {
+            if (!$request->hasFile($field)) {
+                continue;
+            }
+
+            if ($car && $car->{$field}) {
+                $this->deleteStoredFile($car->{$field});
+            }
+
+            $path = $request->file($field)->store('cars/documents', 'public');
+            $data[$field] = Storage::disk('public')->url($path);
+        }
+
+        return $data;
+    }
+
+    private function deleteStoredFile(?string $url): void
+    {
+        if (!$url) {
+            return;
+        }
+
+        $path = str_replace(Storage::disk('public')->url(''), '', $url);
+        Storage::disk('public')->delete($path);
     }
 }

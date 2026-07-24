@@ -30,6 +30,8 @@ Route::middleware(['auth:sanctum', 'role:seller'])->group(function () {
     // Cars
     Route::apiResource('cars', SellerCarController::class);
     Route::post('cars/{car}/toggle-visibility',  [SellerCarController::class, 'toggle_visibility']);
+    Route::post('cars/{car}/gallery',            [SellerCarController::class, 'addGalleryImages']);
+    Route::delete('cars/{car}/gallery',          [SellerCarController::class, 'removeGalleryImage']);
 
     // Purchase Requests
     Route::get('incoming-purchase-requests',                       [SellerRequestController::class, 'incomingPurchaseRequests']);

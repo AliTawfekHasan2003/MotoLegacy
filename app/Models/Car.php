@@ -15,7 +15,19 @@ class Car extends Model
         'brand', 'registration_country', 'engine_year', 'cylinders_count',
         'drive_system', 'plate_number', 'fuel_consumption', 'warranty',
         'warranty_duration', 'status', 'purchase_price', 'rental_price_per_day',
-        'air_conditioning', 'airbags', 'rear_camera', 'bluetooth', 'sunroof', 'image', 'approval_status'
+        'air_conditioning', 'airbags', 'rear_camera', 'bluetooth', 'sunroof',
+        'image', 'gallery', 'ownership_document', 'insurance_document',
+        'inspection_document', 'approval_status'
+    ];
+
+    protected $casts = [
+        'gallery' => 'array',
+        'warranty' => 'boolean',
+        'air_conditioning' => 'boolean',
+        'airbags' => 'boolean',
+        'rear_camera' => 'boolean',
+        'bluetooth' => 'boolean',
+        'sunroof' => 'boolean',
     ];
 
     public function owner()
