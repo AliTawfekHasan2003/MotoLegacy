@@ -14,7 +14,6 @@ use App\Http\Controllers\RequestController;
 |--------------------------------------------------------------------------
 | User Routes  (prefix: api/)
 |--------------------------------------------------------------------------
-*/
 
 // ─── Auth (public) ────────────────────────────────────────────────────────
 Route::post('login',          [AuthController::class, 'login']);
@@ -54,3 +53,4 @@ Route::get('categories',                [CategoryController::class, 'index']);
 Route::get('categories/{category}',     [CategoryController::class, 'show']);
 Route::get('cars',                      [CarController::class, 'index']);
 Route::get('cars/{car}',                [CarController::class, 'show']);
+*/

@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 | Seller Routes  (prefix: api/seller)
 |--------------------------------------------------------------------------
-*/
 
 // ─── Auth (public – no sanctum needed) ───────────────────────────────────
 Route::post('register', [SellerAuthController::class, 'register']);
@@ -47,3 +46,4 @@ Route::middleware(['auth:sanctum', 'role:seller'])->group(function () {
     Route::get('categories',                [CategoryController::class, 'index']);
     Route::get('categories/{category}',     [CategoryController::class, 'show']);
 });
+*/
