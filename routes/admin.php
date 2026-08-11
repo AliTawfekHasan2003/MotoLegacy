@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 | Admin Routes  (prefix: api/admin)
 |--------------------------------------------------------------------------
+*/
 
 // ─── Auth (public) ────────────────────────────────────────────────────────
 Route::post('login', [AdminAuthController::class, 'login']);
@@ -51,4 +52,3 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::post('users/{user}/reset_password', [UserController::class, 'reset_password']);
     Route::post('users/{user}/activate',       [UserController::class, 'user_status_toggle']);
 });
-*/
