@@ -17,6 +17,7 @@ class CarController extends Controller
      *     path="/cars",
      *     tags={"User - Cars"},
      *     summary="List all visible cars with optional filters",
+     *     @OA\Parameter(name="name", in="query", @OA\Schema(type="string")),
      *     @OA\Parameter(name="brand", in="query", @OA\Schema(type="string")),
      *     @OA\Parameter(name="type", in="query", @OA\Schema(type="string", enum={"sale","rent"})),
      *     @OA\Parameter(name="year", in="query", @OA\Schema(type="integer")),
@@ -30,6 +31,9 @@ class CarController extends Controller
     {
         $query = Car::where('approval_status', 'approved')->with(['owner', 'category'])->where('status', '!=', 'hidden');
 
+        if ($request->filled('name')) {
+            $query->where('name', 'like', '%' . $request->name . '%');
+        }
         if ($request->has('brand')) {
             $query->where('brand', 'like', '%' . $request->brand . '%');
         }

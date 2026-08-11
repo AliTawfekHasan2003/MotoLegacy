@@ -4,7 +4,10 @@ namespace App\Http\Controllers\Seller;
 
 use App\Http\Controllers\Controller;
 use App\Models\Car;
+use App\Models\PurchaseRequest;
+use App\Models\RentalRequest;
 use App\Http\Resources\CarResource;
+use App\Services\SseNotifier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -22,7 +25,7 @@ class CarController extends Controller
      *         @OA\MediaType(
      *             mediaType="multipart/form-data",
      *             @OA\Schema(
-     *                 required={"category_id","type","name","year","brand","color","fuel_type","transmission","doors","seats"},
+     *                 required={"category_id","type","name","year","brand","color","fuel_type","transmission","doors","seats","condition"},
      *                 @OA\Property(property="category_id", type="integer"),
      *                 @OA\Property(property="type", type="string", enum={"sale","rent"}),
      *                 @OA\Property(property="name", type="string"),
@@ -33,6 +36,7 @@ class CarController extends Controller
      *                 @OA\Property(property="transmission", type="string"),
      *                 @OA\Property(property="doors", type="integer"),
      *                 @OA\Property(property="seats", type="integer"),
+     *                 @OA\Property(property="condition", type="integer", minimum=1, maximum=5, description="Car condition rating from 1 to 5"),
      *                 @OA\Property(property="purchase_price", type="number"),
      *                 @OA\Property(property="rental_price_per_day", type="number"),
      *                 @OA\Property(property="description", type="string"),
@@ -74,6 +78,7 @@ class CarController extends Controller
             'transmission'         => 'required|string',
             'doors'                => 'required|integer',
             'seats'                => 'required|integer',
+            'condition'            => 'required|integer|min:1|max:5',
             'purchase_price'       => 'required_if:type,sale|nullable|numeric',
             'rental_price_per_day' => 'required_if:type,rent|nullable|numeric',
             'image'                => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
@@ -142,6 +147,7 @@ class CarController extends Controller
      *                 @OA\Property(property="transmission", type="string"),
      *                 @OA\Property(property="doors", type="integer"),
      *                 @OA\Property(property="seats", type="integer"),
+     *                 @OA\Property(property="condition", type="integer", minimum=1, maximum=5, description="Car condition rating from 1 to 5"),
      *                 @OA\Property(property="purchase_price", type="number"),
      *                 @OA\Property(property="rental_price_per_day", type="number"),
      *                 @OA\Property(property="description", type="string"),
@@ -186,6 +192,7 @@ class CarController extends Controller
             'transmission'         => 'nullable|string',
             'doors'                => 'nullable|integer',
             'seats'                => 'nullable|integer',
+            'condition'            => 'nullable|integer|min:1|max:5',
             'purchase_price'       => 'nullable|numeric',
             'rental_price_per_day' => 'nullable|numeric',
             'image'                => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
@@ -350,17 +357,159 @@ class CarController extends Controller
      *     path="/seller/cars/{id}/toggle-visibility",
      *     tags={"Seller - Cars"},
      *     summary="Hide or show a car",
+     *     description="When hiding: rejects ALL requests except request_approve_id if provided. If request_approve_id is omitted, rejects all requests. Showing the car again does not restore requests.",
      *     security={{"bearer_token":{}}},
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\RequestBody(
+     *         required=false,
+     *         @OA\MediaType(
+     *             mediaType="multipart/form-data",
+     *             @OA\Schema(
+     *                 @OA\Property(
+     *                     property="request_approve_id",
+     *                     type="integer",
+     *                     nullable=true,
+     *                     description="Optional. Keep this request; reject every other request for this car. If omitted, reject all requests."
+     *                 )
+     *             )
+     *         )
+     *     ),
      *     @OA\Response(response=200, description="Visibility toggled"),
      * )
      */
-    public function toggle_visibility(Car $car)
+    public function toggle_visibility(Request $request, Car $car)
     {
         $this->authorize('update', $car);
-        $car->status = $car->status === 'hidden' ? 'available' : 'hidden';
+
+        $request->validate([
+            'request_approve_id' => 'nullable|integer',
+        ]);
+
+        $willHide = $car->status !== 'hidden';
+
+        if ($willHide) {
+            $this->rejectOtherRequestsOnHide($car, $request->input('request_approve_id'));
+        }
+
+        $car->status = $willHide ? 'hidden' : 'available';
         $car->save();
+
         return new CarResource($car);
+    }
+
+    private function rejectOtherRequestsOnHide(Car $car, $approveId = null): void
+    {
+        $approveId = $approveId ? (int) $approveId : null;
+        $reason = 'السيارة لم تعد متاحة';
+        $notifier = app(SseNotifier::class);
+
+        if ($car->type === 'sale') {
+            if ($approveId) {
+                $approved = PurchaseRequest::where('car_id', $car->id)->where('id', $approveId)->first();
+                if (!$approved) {
+                    abort(422, 'Invalid request_approve_id for this car');
+                }
+
+                if ($approved->status !== 'accepted') {
+                    $approved->update([
+                        'status' => 'accepted',
+                        'rejection_reason' => null,
+                    ]);
+
+                    $notifier->send(
+                        $approved->user_id,
+                        'purchase_request_status_updated',
+                        [
+                            'request_id' => $approved->id,
+                            'car_id' => $car->id,
+                            'status' => 'accepted',
+                            'rejection_reason' => null,
+                        ],
+                        'تم قبول طلب الشراء',
+                        'تم قبول طلب الشراء الخاص بك'
+                    );
+                }
+            }
+
+            $toReject = PurchaseRequest::where('car_id', $car->id)
+                ->where('status', '!=', 'rejected')
+                ->when($approveId, fn ($q) => $q->where('id', '!=', $approveId))
+                ->get();
+
+            foreach ($toReject as $purchaseRequest) {
+                $purchaseRequest->update([
+                    'status' => 'rejected',
+                    'rejection_reason' => $reason,
+                ]);
+
+                $notifier->send(
+                    $purchaseRequest->user_id,
+                    'purchase_request_status_updated',
+                    [
+                        'request_id' => $purchaseRequest->id,
+                        'car_id' => $car->id,
+                        'status' => 'rejected',
+                        'rejection_reason' => $reason,
+                    ],
+                    'تم رفض طلب الشراء',
+                    $reason
+                );
+            }
+
+            return;
+        }
+
+        if ($approveId) {
+            $approved = RentalRequest::where('car_id', $car->id)->where('id', $approveId)->first();
+            if (!$approved) {
+                abort(422, 'Invalid request_approve_id for this car');
+            }
+
+            if ($approved->status !== 'accepted') {
+                $approved->update([
+                    'status' => 'accepted',
+                    'rejection_reason' => null,
+                ]);
+
+                $notifier->send(
+                    $approved->user_id,
+                    'rental_request_status_updated',
+                    [
+                        'request_id' => $approved->id,
+                        'car_id' => $car->id,
+                        'status' => 'accepted',
+                        'rejection_reason' => null,
+                    ],
+                    'تم قبول طلب الإيجار',
+                    'تم قبول طلب الإيجار الخاص بك'
+                );
+            }
+        }
+
+        $toReject = RentalRequest::where('car_id', $car->id)
+            ->where('status', '!=', 'rejected')
+            ->when($approveId, fn ($q) => $q->where('id', '!=', $approveId))
+            ->get();
+
+        foreach ($toReject as $rentalRequest) {
+            $rentalRequest->update([
+                'status' => 'rejected',
+                'rejection_reason' => $reason,
+            ]);
+
+            $notifier->send(
+                $rentalRequest->user_id,
+                'rental_request_status_updated',
+                [
+                    'request_id' => $rentalRequest->id,
+                    'car_id' => $car->id,
+                    'status' => 'rejected',
+                    'rejection_reason' => $reason,
+                ],
+                'تم رفض طلب الإيجار',
+                $reason
+            );
+        }
     }
 
     /**
@@ -369,6 +518,7 @@ class CarController extends Controller
      *     tags={"Seller - Cars"},
      *     security={{"bearer_token":{}}},
      *     summary="List all visible cars with optional filters",
+     *     @OA\Parameter(name="name", in="query", @OA\Schema(type="string")),
      *     @OA\Parameter(name="brand", in="query", @OA\Schema(type="string")),
      *     @OA\Parameter(name="type", in="query", @OA\Schema(type="string", enum={"sale","rent"})),
      *     @OA\Parameter(name="year", in="query", @OA\Schema(type="integer")),
@@ -384,6 +534,9 @@ class CarController extends Controller
 
         $query = Car::where('user_id', $user->id)->with(['owner', 'category'])->where('status', '!=', 'hidden');
 
+        if ($request->filled('name')) {
+            $query->where('name', 'like', '%' . $request->name . '%');
+        }
         if ($request->has('brand')) {
             $query->where('brand', 'like', '%' . $request->brand . '%');
         }

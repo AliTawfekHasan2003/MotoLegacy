@@ -4,6 +4,7 @@ use App\Http\Controllers\Seller\AuthController as SellerAuthController;
 use App\Http\Controllers\Seller\CarController as SellerCarController;
 use App\Http\Controllers\Seller\CategoryController;
 use App\Http\Controllers\Seller\RequestController as SellerRequestController;
+use App\Http\Controllers\SseController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -46,5 +47,10 @@ Route::middleware(['auth:sanctum', 'role:seller'])->group(function () {
 
     Route::get('categories',                [CategoryController::class, 'index']);
     Route::get('categories/{category}',     [CategoryController::class, 'show']);
+
+    // SSE realtime notifications (seller — car approval/rejection)
+    Route::get('sse/stream', [SseController::class, 'stream'])
+        ->middleware('sse.token')
+        ->withoutMiddleware([\Illuminate\Routing\Middleware\ThrottleRequests::class . ':api']);
 });
 

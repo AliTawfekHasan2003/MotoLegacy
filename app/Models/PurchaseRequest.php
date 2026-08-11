@@ -11,7 +11,7 @@ class PurchaseRequest extends Model
 
     protected $fillable = [
         'user_id', 'car_id', 'offered_price', 'meeting_location',
-        'meeting_date', 'notes', 'status', 'id_number', 'payment_method'
+        'meeting_date', 'notes', 'status', 'rejection_reason', 'id_number', 'payment_method'
     ];
 
     public function user()

@@ -23,6 +23,7 @@ class PurchaseRequestResource extends JsonResource
             'meeting_date' => $this->meeting_date,
             'notes' => $this->notes,
             'status' => $this->status,
+            'rejection_reason' => $this->rejection_reason,
             'id_number' => $this->id_number,
             'payment_method' => $this->payment_method,
             'created_at' => $this->created_at,

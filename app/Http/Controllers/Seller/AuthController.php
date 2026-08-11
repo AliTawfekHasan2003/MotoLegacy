@@ -23,7 +23,7 @@ class AuthController extends Controller
      *         @OA\MediaType(
      *             mediaType="multipart/form-data",
      *             @OA\Schema(
-     *                 required={"name","email","password","password_confirmation","phone","license_number","business_type"},
+     *                 required={"name","email","password","password_confirmation","phone","business_type"},
      *                 @OA\Property(property="name", type="string"),
      *                 @OA\Property(property="email", format="email", type="string"),
      *                 @OA\Property(property="password", type="string"),
@@ -31,8 +31,8 @@ class AuthController extends Controller
      *                 @OA\Property(property="phone", type="string"),
      *                 @OA\Property(property="birth_date", type="string", format="date"),
      *                 @OA\Property(property="address", type="string"),
-     *                 @OA\Property(property="license_number", type="string"),
-     *                 @OA\Property(property="license_expiry_date", type="string", format="date"),
+     *                 @OA\Property(property="license_number", type="string", nullable=true),
+     *                 @OA\Property(property="license_expiry_date", type="string", format="date", nullable=true),
      *                 @OA\Property(property="business_type", type="string"),
      *             )
      *         )
@@ -50,7 +50,7 @@ class AuthController extends Controller
             'phone'               => ['required', 'string'],
             'birth_date'          => ['nullable', 'date'],
             'address'             => ['nullable', 'string'],
-            'license_number'      => ['required', 'string'],
+            'license_number'      => ['nullable', 'string'],
             'license_expiry_date' => ['nullable', 'date'],
             'business_type'       => ['required', 'string'],
         ]);
@@ -193,8 +193,8 @@ class AuthController extends Controller
      *                 @OA\Property(property="phone", type="string"),
      *                 @OA\Property(property="birth_date", type="string", format="date"),
      *                 @OA\Property(property="address", type="string"),
-     *                 @OA\Property(property="license_number", type="string"),
-     *                 @OA\Property(property="license_expiry_date", type="string", format="date"),
+     *                 @OA\Property(property="license_number", type="string", nullable=true),
+     *                 @OA\Property(property="license_expiry_date", type="string", format="date", nullable=true),
      *                 @OA\Property(property="business_type", type="string"),
      *                 @OA\Property(property="_method", type="string", example="PUT"),
      *             )
@@ -213,8 +213,8 @@ class AuthController extends Controller
             'email'               => ['required', 'string', Rule::unique('users', 'email')->ignore($user->id)],
             'birth_date'          => ['nullable', 'date'],
             'address'             => ['nullable', 'string'],
-            'license_number'      => ['required', 'string'],
-            'license_expiry_date' => ['required', 'date'],
+            'license_number'      => ['nullable', 'string'],
+            'license_expiry_date' => ['nullable', 'date'],
             'business_type'       => ['required', 'string'],
         ]);
 

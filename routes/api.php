@@ -9,6 +9,7 @@ use App\Http\Controllers\MessageController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\RatingController;
 use App\Http\Controllers\RequestController;
+use App\Http\Controllers\SseController;
 
 /*
 |--------------------------------------------------------------------------
@@ -45,6 +46,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Ratings (authenticated)
     Route::post('ratings', [RatingController::class, 'store']);
+
+    // SSE realtime notifications (buyer/renter)
+    Route::get('sse/stream', [SseController::class, 'stream'])
+        ->middleware('sse.token')
+        ->withoutMiddleware([\Illuminate\Routing\Middleware\ThrottleRequests::class . ':api']);
 });
 
 // ─── Public routes ────────────────────────────────────────────────────────

@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\CarResource;
 use App\Models\Car;
+use App\Services\SseNotifier;
 
 class CarController extends Controller
 {
@@ -21,6 +22,7 @@ class CarController extends Controller
      *     tags={"Admin - Cars"},
      *     security={{"bearer_token":{}}},
      *     summary="List all visible cars with optional filters",
+     *     @OA\Parameter(name="name", in="query", @OA\Schema(type="string")),
      *     @OA\Parameter(name="brand", in="query", @OA\Schema(type="string")),
      *     @OA\Parameter(name="approval_status", in="query", @OA\Schema(type="string", enum={"pending","approved", "rejected"})),
      *     @OA\Parameter(name="type", in="query", @OA\Schema(type="string", enum={"sale","rent"})),
@@ -36,6 +38,9 @@ class CarController extends Controller
 
         $query = Car::with(['owner', 'category'])->where('status', '!=', 'hidden');
 
+        if ($request->filled('name')) {
+            $query->where('name', 'like', '%' . $request->name . '%');
+        }
         if ($request->has('brand')) {
             $query->where('brand', 'like', '%' . $request->brand . '%');
         }
@@ -98,6 +103,7 @@ class CarController extends Controller
      *             @OA\Schema(
      *             required={"status"},
      *             @OA\Property(property="status", type="string", enum={"approved","rejected"}),
+     *             @OA\Property(property="rejection_reason", type="string", nullable=true, description="Optional. Used when status is rejected"),
      *                 @OA\Property(property="_method", type="string", example="PATCH"),
      *         )
      * 
@@ -109,16 +115,37 @@ class CarController extends Controller
     public function approveCar(Request $request, Car $car)
     {
         $request->validate([
-            'status' => 'required|in:approved,rejected'
+            'status' => 'required|in:approved,rejected',
+            'rejection_reason' => 'nullable|string|max:1000',
         ]);
 
         $car->update([
-            'approval_status' => $request->status
+            'approval_status' => $request->status,
+            'rejection_reason' => $request->status === 'rejected'
+                ? $request->rejection_reason
+                : null,
         ]);
+
+        $car->load('owner', 'category');
+
+        $isRejected = $request->status === 'rejected';
+        app(SseNotifier::class)->send(
+            $car->user_id,
+            'car_approval_status_updated',
+            [
+                'car_id' => $car->id,
+                'approval_status' => $car->approval_status,
+                'rejection_reason' => $car->rejection_reason,
+            ],
+            $isRejected ? 'تم رفض السيارة' : 'تم قبول السيارة',
+            $isRejected
+                ? ($car->rejection_reason ?: 'تم رفض سيارتك من الإدارة')
+                : 'تم قبول سيارتك من الإدارة'
+        );
 
         return response()->json([
             'message' => 'Car status updated successfully',
-            'data' => $car
+            'data' => new CarResource($car),
         ]);
     }
 }

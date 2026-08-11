@@ -26,11 +26,12 @@ class RequestController extends Controller
      *             @OA\Schema(
      *                 required={"car_id"},
      *                 @OA\Property(property="car_id", type="integer"),
-     *                 @OA\Property(property="meeting_location", type="string"),
-     *                 @OA\Property(property="meeting_date", type="string", format="date"),
-     *                 @OA\Property(property="notes", type="string"),
-     *                 @OA\Property(property="id_number", type="string"),
-     *                 @OA\Property(property="payment_method", type="string"),
+     *                 @OA\Property(property="offered_price", type="number", nullable=true, description="Optional offer price from the buyer"),
+     *                 @OA\Property(property="meeting_location", type="string", nullable=true),
+     *                 @OA\Property(property="meeting_date", type="string", format="date", nullable=true),
+     *                 @OA\Property(property="notes", type="string", nullable=true),
+     *                 @OA\Property(property="id_number", type="string", nullable=true),
+     *                 @OA\Property(property="payment_method", type="string", nullable=true),
      *             )
      *         )
      *     ),
@@ -41,7 +42,7 @@ class RequestController extends Controller
     {
         $request->validate([
             'car_id' => 'required|exists:cars,id',
-            'meeting_location' => 'nullable|string',
+            'offered_price' => 'nullable|numeric|min:0',
             'meeting_date' => 'nullable|date',
             'notes' => 'nullable|string',
             'id_number' => 'nullable|string',
@@ -54,11 +55,9 @@ class RequestController extends Controller
             return response()->json(['message' => 'This car is not for sale'], 400);
         }
 
-        $purchasePrice = $car->purchase_price;
-
         $purchaseRequest = Auth::user()->purchaseRequests()->create([
             'car_id' => $car->id,
-            'offered_price' => $purchasePrice, 
+            'offered_price' => $request->offered_price,
             'meeting_location' => $request->meeting_location ?? null,
             'meeting_date' => $request->meeting_date ?? null,
             'notes' => $request->notes ?? null,
@@ -103,11 +102,11 @@ class RequestController extends Controller
      *                 @OA\Property(property="car_id", type="integer"),
      *                 @OA\Property(property="start_date", type="string", format="date"),
      *                 @OA\Property(property="end_date", type="string", format="date"),
-     *                 @OA\Property(property="pickup_location", type="string"),
-     *                 @OA\Property(property="return_location", type="string"),
-     *                 @OA\Property(property="notes", type="string"),
-     *                 @OA\Property(property="id_number", type="string"),
-     *                 @OA\Property(property="payment_method", type="string")
+     *                 @OA\Property(property="pickup_location", type="string", nullable=true),
+     *                 @OA\Property(property="return_location", type="string", nullable=true),
+     *                 @OA\Property(property="notes", type="string", nullable=true),
+     *                 @OA\Property(property="id_number", type="string", nullable=true),
+     *                 @OA\Property(property="payment_method", type="string", nullable=true)
      *             )
      *         )
      *     ),
@@ -120,8 +119,6 @@ class RequestController extends Controller
             'car_id' => 'required|exists:cars,id',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after:start_date',
-            'pickup_location' => 'nullable|string',
-            'return_location' => 'nullable|string',
             'notes' => 'nullable|string',
             'id_number' => 'nullable|string',
             'payment_method' => 'nullable|string',

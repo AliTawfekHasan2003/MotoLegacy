@@ -14,10 +14,10 @@ class Car extends Model
         'fuel_type', 'transmission', 'doors', 'seats', 'previous_owners_count',
         'brand', 'registration_country', 'engine_year', 'cylinders_count',
         'drive_system', 'plate_number', 'fuel_consumption', 'warranty',
-        'warranty_duration', 'status', 'purchase_price', 'rental_price_per_day',
+        'warranty_duration', 'status', 'condition', 'purchase_price', 'rental_price_per_day',
         'air_conditioning', 'airbags', 'rear_camera', 'bluetooth', 'sunroof',
         'image', 'gallery', 'ownership_document', 'insurance_document',
-        'inspection_document', 'approval_status'
+        'inspection_document', 'approval_status', 'rejection_reason'
     ];
 
     protected $casts = [

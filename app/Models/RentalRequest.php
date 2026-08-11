@@ -11,7 +11,7 @@ class RentalRequest extends Model
 
     protected $fillable = [
         'user_id', 'car_id', 'start_date', 'end_date', 'total_price',
-        'pickup_location', 'return_location', 'notes', 'status', 'id_number', 'payment_method'
+        'pickup_location', 'return_location', 'notes', 'status', 'rejection_reason', 'id_number', 'payment_method'
     ];
 
     public function user()

@@ -163,6 +163,13 @@
                 "operationId": "ba01c97694fb68c55faccdc185e8d1ab",
                 "parameters": [
                     {
+                        "name": "name",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
                         "name": "brand",
                         "in": "query",
                         "schema": {
@@ -294,6 +301,11 @@
                                             "approved",
                                             "rejected"
                                         ]
+                                    },
+                                    "rejection_reason": {
+                                        "description": "Optional. Used when status is rejected",
+                                        "type": "string",
+                                        "nullable": true
                                     },
                                     "_method": {
                                         "type": "string",
@@ -684,11 +696,13 @@
                                         "type": "string"
                                     },
                                     "license_number": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "nullable": true
                                     },
                                     "license_expiry_date": {
                                         "type": "string",
-                                        "format": "date"
+                                        "format": "date",
+                                        "nullable": true
                                     },
                                     "business_type": {
                                         "type": "string"
@@ -782,11 +796,13 @@
                                         "type": "string"
                                     },
                                     "license_number": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "nullable": true
                                     },
                                     "license_expiry_date": {
                                         "type": "string",
-                                        "format": "date"
+                                        "format": "date",
+                                        "nullable": true
                                     },
                                     "business_type": {
                                         "type": "string"
@@ -1172,6 +1188,13 @@
                 "summary": "List all visible cars with optional filters",
                 "operationId": "d8232bc6a16fec784f4a5fca541f9856",
                 "parameters": [
+                    {
+                        "name": "name",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
                     {
                         "name": "brand",
                         "in": "query",
@@ -1611,21 +1634,31 @@
                                     "car_id": {
                                         "type": "integer"
                                     },
+                                    "offered_price": {
+                                        "description": "Optional offer price from the buyer",
+                                        "type": "number",
+                                        "nullable": true
+                                    },
                                     "meeting_location": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "nullable": true
                                     },
                                     "meeting_date": {
                                         "type": "string",
-                                        "format": "date"
+                                        "format": "date",
+                                        "nullable": true
                                     },
                                     "notes": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "nullable": true
                                     },
                                     "id_number": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "nullable": true
                                     },
                                     "payment_method": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "nullable": true
                                     }
                                 },
                                 "type": "object"
@@ -1694,19 +1727,24 @@
                                         "format": "date"
                                     },
                                     "pickup_location": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "nullable": true
                                     },
                                     "return_location": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "nullable": true
                                     },
                                     "notes": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "nullable": true
                                     },
                                     "id_number": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "nullable": true
                                     },
                                     "payment_method": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "nullable": true
                                     }
                                 },
                                 "type": "object"
@@ -1763,7 +1801,6 @@
                                     "password",
                                     "password_confirmation",
                                     "phone",
-                                    "license_number",
                                     "business_type"
                                 ],
                                 "properties": {
@@ -1791,11 +1828,13 @@
                                         "type": "string"
                                     },
                                     "license_number": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "nullable": true
                                     },
                                     "license_expiry_date": {
                                         "type": "string",
-                                        "format": "date"
+                                        "format": "date",
+                                        "nullable": true
                                     },
                                     "business_type": {
                                         "type": "string"
@@ -1926,11 +1965,13 @@
                                         "type": "string"
                                     },
                                     "license_number": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "nullable": true
                                     },
                                     "license_expiry_date": {
                                         "type": "string",
-                                        "format": "date"
+                                        "format": "date",
+                                        "nullable": true
                                     },
                                     "business_type": {
                                         "type": "string"
@@ -2025,6 +2066,13 @@
                 "operationId": "8b883685d604f97137c4d4898abc6e0c",
                 "parameters": [
                     {
+                        "name": "name",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
                         "name": "brand",
                         "in": "query",
                         "schema": {
@@ -2103,7 +2151,8 @@
                                     "fuel_type",
                                     "transmission",
                                     "doors",
-                                    "seats"
+                                    "seats",
+                                    "condition"
                                 ],
                                 "properties": {
                                     "category_id": {
@@ -2139,6 +2188,12 @@
                                     },
                                     "seats": {
                                         "type": "integer"
+                                    },
+                                    "condition": {
+                                        "description": "Car condition rating from 1 to 5",
+                                        "type": "integer",
+                                        "maximum": 5,
+                                        "minimum": 1
                                     },
                                     "purchase_price": {
                                         "type": "number"
@@ -2346,6 +2401,12 @@
                                     },
                                     "seats": {
                                         "type": "integer"
+                                    },
+                                    "condition": {
+                                        "description": "Car condition rating from 1 to 5",
+                                        "type": "integer",
+                                        "maximum": 5,
+                                        "minimum": 1
                                     },
                                     "purchase_price": {
                                         "type": "number"
@@ -2608,6 +2669,7 @@
                     "Seller - Cars"
                 ],
                 "summary": "Hide or show a car",
+                "description": "When hiding: rejects ALL requests except request_approve_id if provided. If request_approve_id is omitted, rejects all requests. Showing the car again does not restore requests.",
                 "operationId": "dd91d1eea5e341934baff1d13e91fd02",
                 "parameters": [
                     {
@@ -2619,6 +2681,23 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "request_approve_id": {
+                                        "description": "Optional. Keep this request; reject every other request for this car. If omitted, reject all requests.",
+                                        "type": "integer",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "Visibility toggled"
@@ -2730,6 +2809,11 @@
                                             "accepted",
                                             "rejected"
                                         ]
+                                    },
+                                    "rejection_reason": {
+                                        "description": "Optional. Used when status is rejected",
+                                        "type": "string",
+                                        "nullable": true
                                     }
                                 },
                                 "type": "object"
@@ -2803,6 +2887,11 @@
                                             "accepted",
                                             "rejected"
                                         ]
+                                    },
+                                    "rejection_reason": {
+                                        "description": "Optional. Used when status is rejected",
+                                        "type": "string",
+                                        "nullable": true
                                     }
                                 },
                                 "type": "object"
@@ -2816,6 +2905,79 @@
                     },
                     "403": {
                         "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
+        "/sse/stream": {
+            "get": {
+                "tags": [
+                    "SSE"
+                ],
+                "summary": "Open SSE stream for realtime notifications",
+                "description": "Keep this connection open. Events are pushed when a purchase/rental request or car approval status changes. Sellers should use /seller/sse/stream. For browser EventSource, pass token as query param: ?token=YOUR_TOKEN",
+                "operationId": "31418ba9243dd6fa638d1a6f37f75e66",
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "query",
+                        "description": "Optional Sanctum token for EventSource clients that cannot set Authorization headers",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "text/event-stream connection",
+                        "content": {
+                            "text/event-stream": {}
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
+        "/seller/sse/stream": {
+            "get": {
+                "tags": [
+                    "SSE"
+                ],
+                "summary": "Open SSE stream for seller notifications",
+                "description": "Same as /sse/stream but under seller routes. Used for car approval/rejection events.",
+                "operationId": "6d9e73576689efd4721e7a338e0db8e5",
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "text/event-stream connection",
+                        "content": {
+                            "text/event-stream": {}
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
                     }
                 },
                 "security": [
@@ -2910,6 +3072,10 @@
         {
             "name": "Seller - Requests",
             "description": "Seller - Requests"
+        },
+        {
+            "name": "SSE",
+            "description": "SSE"
         }
     ],
     "components": {

@@ -25,6 +25,7 @@ class RentalRequestResource extends JsonResource
             'return_location' => $this->return_location,
             'notes' => $this->notes,
             'status' => $this->status,
+            'rejection_reason' => $this->rejection_reason,
             'id_number' => $this->id_number,
             'payment_method' => $this->payment_method,
             'created_at' => $this->created_at,

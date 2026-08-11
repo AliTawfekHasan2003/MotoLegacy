@@ -7,6 +7,7 @@ use App\Models\PurchaseRequest;
 use App\Models\RentalRequest;
 use App\Http\Resources\PurchaseRequestResource;
 use App\Http\Resources\RentalRequestResource;
+use App\Services\SseNotifier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -43,7 +44,8 @@ class RequestController extends Controller
      *         required=true,
      *         @OA\JsonContent(
      *             required={"status"},
-     *             @OA\Property(property="status", type="string", enum={"accepted","rejected"})
+     *             @OA\Property(property="status", type="string", enum={"accepted","rejected"}),
+     *             @OA\Property(property="rejection_reason", type="string", nullable=true, description="Optional. Used when status is rejected")
      *         )
      *     ),
      *     @OA\Response(response=200, description="Status updated"),
@@ -52,15 +54,41 @@ class RequestController extends Controller
      */
     public function updatePurchaseStatus(Request $request, PurchaseRequest $purchaseRequest)
     {
-        $request->validate(['status' => 'required|in:accepted,rejected']);
+        $request->validate([
+            'status' => 'required|in:accepted,rejected',
+            'rejection_reason' => 'nullable|string|max:1000',
+        ]);
 
         if ($purchaseRequest->car->user_id !== Auth::id()) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        $purchaseRequest->update(['status' => $request->status]);
+        $purchaseRequest->update([
+            'status' => $request->status,
+            'rejection_reason' => $request->status === 'rejected'
+                ? $request->rejection_reason
+                : null,
+        ]);
 
-        return new PurchaseRequestResource($purchaseRequest->load('user', 'car'));
+        $purchaseRequest->load('user', 'car');
+
+        $isRejected = $request->status === 'rejected';
+        app(SseNotifier::class)->send(
+            $purchaseRequest->user_id,
+            'purchase_request_status_updated',
+            [
+                'request_id' => $purchaseRequest->id,
+                'car_id' => $purchaseRequest->car_id,
+                'status' => $purchaseRequest->status,
+                'rejection_reason' => $purchaseRequest->rejection_reason,
+            ],
+            $isRejected ? 'تم رفض طلب الشراء' : 'تم قبول طلب الشراء',
+            $isRejected
+                ? ($purchaseRequest->rejection_reason ?: 'تم رفض طلب الشراء الخاص بك')
+                : 'تم قبول طلب الشراء الخاص بك'
+        );
+
+        return new PurchaseRequestResource($purchaseRequest);
     }
 
     // ─── Rental ───────────────────────────────────────────────
@@ -94,7 +122,8 @@ class RequestController extends Controller
      *         required=true,
      *         @OA\JsonContent(
      *             required={"status"},
-     *             @OA\Property(property="status", type="string", enum={"accepted","rejected"})
+     *             @OA\Property(property="status", type="string", enum={"accepted","rejected"}),
+     *             @OA\Property(property="rejection_reason", type="string", nullable=true, description="Optional. Used when status is rejected")
      *         )
      *     ),
      *     @OA\Response(response=200, description="Status updated"),
@@ -103,14 +132,40 @@ class RequestController extends Controller
      */
     public function updateRentalStatus(Request $request, RentalRequest $rentalRequest)
     {
-        $request->validate(['status' => 'required|in:accepted,rejected']);
+        $request->validate([
+            'status' => 'required|in:accepted,rejected',
+            'rejection_reason' => 'nullable|string|max:1000',
+        ]);
 
         if ($rentalRequest->car->user_id !== Auth::id()) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        $rentalRequest->update(['status' => $request->status]);
+        $rentalRequest->update([
+            'status' => $request->status,
+            'rejection_reason' => $request->status === 'rejected'
+                ? $request->rejection_reason
+                : null,
+        ]);
 
-        return new RentalRequestResource($rentalRequest->load('user', 'car'));
+        $rentalRequest->load('user', 'car');
+
+        $isRejected = $request->status === 'rejected';
+        app(SseNotifier::class)->send(
+            $rentalRequest->user_id,
+            'rental_request_status_updated',
+            [
+                'request_id' => $rentalRequest->id,
+                'car_id' => $rentalRequest->car_id,
+                'status' => $rentalRequest->status,
+                'rejection_reason' => $rentalRequest->rejection_reason,
+            ],
+            $isRejected ? 'تم رفض طلب الإيجار' : 'تم قبول طلب الإيجار',
+            $isRejected
+                ? ($rentalRequest->rejection_reason ?: 'تم رفض طلب الإيجار الخاص بك')
+                : 'تم قبول طلب الإيجار الخاص بك'
+        );
+
+        return new RentalRequestResource($rentalRequest);
     }
 }
