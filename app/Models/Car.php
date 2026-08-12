@@ -23,6 +23,7 @@ class Car extends Model
     protected $casts = [
         'gallery' => 'array',
         'warranty' => 'boolean',
+        'condition' => 'float',
         'air_conditioning' => 'boolean',
         'airbags' => 'boolean',
         'rear_camera' => 'boolean',

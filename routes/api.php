@@ -10,6 +10,7 @@ use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\RatingController;
 use App\Http\Controllers\RequestController;
 use App\Http\Controllers\SseController;
+use App\Http\Controllers\StatsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -54,6 +55,7 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 // ─── Public routes ────────────────────────────────────────────────────────
+Route::get('stats',                     [StatsController::class, 'index']);
 Route::post('messages',                 [MessageController::class, 'store']);
 Route::get('ratings/{seller_id}',       [RatingController::class, 'index']);
 Route::get('categories',                [CategoryController::class, 'index']);

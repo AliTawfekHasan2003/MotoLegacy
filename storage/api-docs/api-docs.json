@@ -2190,8 +2190,9 @@
                                         "type": "integer"
                                     },
                                     "condition": {
-                                        "description": "Car condition rating from 1 to 5",
-                                        "type": "integer",
+                                        "description": "Car condition rating from 1 to 5 (e.g. 4.5)",
+                                        "type": "number",
+                                        "format": "float",
                                         "maximum": 5,
                                         "minimum": 1
                                     },
@@ -2403,8 +2404,9 @@
                                         "type": "integer"
                                     },
                                     "condition": {
-                                        "description": "Car condition rating from 1 to 5",
-                                        "type": "integer",
+                                        "description": "Car condition rating from 1 to 5 (e.g. 4.5)",
+                                        "type": "number",
+                                        "format": "float",
                                         "maximum": 5,
                                         "minimum": 1
                                     },
@@ -2986,6 +2988,83 @@
                     }
                 ]
             }
+        },
+        "/stats": {
+            "get": {
+                "tags": [
+                    "User - Stats"
+                ],
+                "summary": "Live platform statistics (trust & strength signals)",
+                "description": "Returns live counts that show marketplace activity and credibility.",
+                "operationId": "399c78d803929b852fcb40df8773b308",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "total_users": {
+                                            "description": "Registered users on the platform",
+                                            "type": "integer",
+                                            "example": 150
+                                        },
+                                        "total_sellers": {
+                                            "description": "Active sellers",
+                                            "type": "integer",
+                                            "example": 42
+                                        },
+                                        "available_cars": {
+                                            "description": "Approved cars currently visible",
+                                            "type": "integer",
+                                            "example": 85
+                                        },
+                                        "cars_for_sale": {
+                                            "description": "Visible cars listed for sale",
+                                            "type": "integer",
+                                            "example": 50
+                                        },
+                                        "cars_for_rent": {
+                                            "description": "Visible cars listed for rent",
+                                            "type": "integer",
+                                            "example": 35
+                                        },
+                                        "most_requested_category": {
+                                            "description": "Category with the most purchase + rental requests",
+                                            "properties": {
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "SUV"
+                                                },
+                                                "requests_count": {
+                                                    "type": "integer",
+                                                    "example": 24
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "most_requested_brand": {
+                                            "description": "Brand with the most purchase + rental requests",
+                                            "properties": {
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Toyota"
+                                                },
+                                                "requests_count": {
+                                                    "type": "integer",
+                                                    "example": 18
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "tags": [
@@ -3076,6 +3155,10 @@
         {
             "name": "SSE",
             "description": "SSE"
+        },
+        {
+            "name": "User - Stats",
+            "description": "User - Stats"
         }
     ],
     "components": {
