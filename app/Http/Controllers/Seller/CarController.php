@@ -18,7 +18,7 @@ class CarController extends Controller
      * @OA\Post(
      *     path="/seller/cars",
      *     tags={"Seller - Cars"},
-     *     summary="Add a new car for sale or rent",
+     *     summary="Add a new car for sale or rent (notifies admins via SSE type car_created)",
      *     security={{"bearer_token":{}}},
      *     @OA\RequestBody(
      *         required=true,
@@ -109,6 +109,11 @@ class CarController extends Controller
             'ownership_document',
             'insurance_document',
             'inspection_document',
+            'approval_status',
+            'rejection_reason',
+            'user_id',
+            'is_sold',
+            'is_rented',
         ]);
 
         if ($request->hasFile('image')) {
@@ -120,15 +125,19 @@ class CarController extends Controller
         $data = array_merge($data, $this->storeDocumentFiles($request));
 
         $car = Auth::user()->cars()->create($data);
+        $car->load('owner', 'category');
 
-        return new CarResource($car->load('owner', 'category'));
+        app(SseNotifier::class)->notifyAdminsOfPendingCar($car);
+
+        return new CarResource($car);
     }
+    
 
     /**
      * @OA\Post(
      *     path="/seller/cars/{id}",
      *     tags={"Seller - Cars"},
-     *     summary="Update car details (use _method=PUT in form-data)",
+     *     summary="Update car details (use _method=PUT in form-data). If the car was rejected, approval_status becomes pending, rejection_reason is cleared, and admins get SSE type car_updated. Approved/pending cars keep their approval_status.",
      *     security={{"bearer_token":{}}},
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
      *     @OA\RequestBody(
@@ -223,6 +232,12 @@ class CarController extends Controller
             'insurance_document',
             'inspection_document',
             '_method',
+            'approval_status',
+            'rejection_reason',
+            'user_id',
+            'status',
+            'is_sold',
+            'is_rented',
         ]);
 
         if ($request->hasFile('image')) {
@@ -236,9 +251,20 @@ class CarController extends Controller
 
         $data = array_merge($data, $this->storeDocumentFiles($request, $car));
 
-        $car->update($data);
+        $wasRejected = $car->approval_status === 'rejected';
+        if ($wasRejected) {
+            $data['approval_status'] = 'pending';
+            $data['rejection_reason'] = null;
+        }
 
-        return new CarResource($car->load('owner', 'category'));
+        $car->update($data);
+        $car->load('owner', 'category');
+
+        if ($wasRejected) {
+            app(SseNotifier::class)->notifyAdminsOfUpdatedCar($car);
+        }
+
+        return new CarResource($car);
     }
 
     /**
@@ -357,7 +383,7 @@ class CarController extends Controller
      *     path="/seller/cars/{id}/toggle-visibility",
      *     tags={"Seller - Cars"},
      *     summary="Hide or show a car",
-     *     description="When hiding: rejects ALL requests except request_approve_id if provided. If request_approve_id is omitted, rejects all requests. Showing the car again does not restore requests.",
+     *     description="POST /seller/cars/{id}/toggle-visibility. Body field: request_approve_id (integer, optional, nullable) — purchase or rental request id. Without it: car becomes hidden, is_sold=false, is_rented=false. With it: that request is accepted, others rejected; is_sold=true if car type is sale, is_rented=true if type is rent. Hidden cars disappear from user and admin lists; seller still sees them. Showing again sets status=available and is_sold=is_rented=false. Requests are not restored.",
      *     security={{"bearer_token":{}}},
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
      *     @OA\RequestBody(
@@ -369,7 +395,7 @@ class CarController extends Controller
      *                     property="request_approve_id",
      *                     type="integer",
      *                     nullable=true,
-     *                     description="Optional. Keep this request; reject every other request for this car. If omitted, reject all requests."
+     *                     description="Optional for sale and rent. If sent: accept this request, set is_sold or is_rented to true, reject the rest. If omitted (null): only hide the car."
      *                 )
      *             )
      *         )
@@ -386,15 +412,22 @@ class CarController extends Controller
         ]);
 
         $willHide = $car->status !== 'hidden';
+        $approveId = $request->input('request_approve_id');
 
         if ($willHide) {
-            $this->rejectOtherRequestsOnHide($car, $request->input('request_approve_id'));
+            $this->rejectOtherRequestsOnHide($car, $approveId);
+            $car->status = 'hidden';
+            $car->is_sold = (bool) $approveId && $car->type === 'sale';
+            $car->is_rented = (bool) $approveId && $car->type === 'rent';
+        } else {
+            $car->status = 'available';
+            $car->is_sold = false;
+            $car->is_rented = false;
         }
 
-        $car->status = $willHide ? 'hidden' : 'available';
         $car->save();
 
-        return new CarResource($car);
+        return new CarResource($car->load('owner', 'category'));
     }
 
     private function rejectOtherRequestsOnHide(Car $car, $approveId = null): void
@@ -517,10 +550,14 @@ class CarController extends Controller
      *     path="/seller/cars",
      *     tags={"Seller - Cars"},
      *     security={{"bearer_token":{}}},
-     *     summary="List all visible cars with optional filters",
+     *     summary="List seller cars including hidden, sold, and rented",
+     *     description="Seller sees all own cars. Filter sold with is_sold=true, rented with is_rented=true, temporarily hidden with status=hidden&is_sold=false&is_rented=false.",
      *     @OA\Parameter(name="name", in="query", @OA\Schema(type="string")),
      *     @OA\Parameter(name="brand", in="query", @OA\Schema(type="string")),
      *     @OA\Parameter(name="type", in="query", @OA\Schema(type="string", enum={"sale","rent"})),
+     *     @OA\Parameter(name="status", in="query", @OA\Schema(type="string", enum={"available","hidden"})),
+     *     @OA\Parameter(name="is_sold", in="query", @OA\Schema(type="boolean"), description="Filter sold cars"),
+     *     @OA\Parameter(name="is_rented", in="query", @OA\Schema(type="boolean"), description="Filter rented cars"),
      *     @OA\Parameter(name="year", in="query", @OA\Schema(type="integer")),
      *     @OA\Parameter(name="min_price", in="query", @OA\Schema(type="number")),
      *     @OA\Parameter(name="max_price", in="query", @OA\Schema(type="number")),
@@ -532,7 +569,7 @@ class CarController extends Controller
     {
         $user = to_user(Auth::user());
 
-        $query = Car::where('user_id', $user->id)->with(['owner', 'category'])->where('status', '!=', 'hidden');
+        $query = Car::where('user_id', $user->id)->with(['owner', 'category']);
 
         if ($request->filled('name')) {
             $query->where('name', 'like', '%' . $request->name . '%');
@@ -542,6 +579,15 @@ class CarController extends Controller
         }
         if ($request->has('type')) {
             $query->where('type', $request->type);
+        }
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        if ($request->has('is_sold')) {
+            $query->where('is_sold', filter_var($request->is_sold, FILTER_VALIDATE_BOOLEAN));
+        }
+        if ($request->has('is_rented')) {
+            $query->where('is_rented', filter_var($request->is_rented, FILTER_VALIDATE_BOOLEAN));
         }
         if ($request->has('year')) {
             $query->where('year', $request->year);
@@ -570,13 +616,15 @@ class CarController extends Controller
      *     path="/seller/cars/{id}",
      *     tags={"Seller - Cars"},
      *     security={{"bearer_token":{}}},
-     *     summary="Get car details",
+     *     summary="Get seller car details including hidden/sold/rented cars",
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
      *     @OA\Response(response=200, description="Successful operation"),
      * )
      */
     public function show(Car $car)
     {
+        $this->authorize('update', $car);
+
         return new CarResource($car->load('owner', 'category'));
     }
 

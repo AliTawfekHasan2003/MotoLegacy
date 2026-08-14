@@ -51,6 +51,10 @@ class RequestController extends Controller
 
         $car = Car::findOrFail($request->car_id);
 
+        if ($car->status === 'hidden' || $car->approval_status !== 'approved') {
+            return response()->json(['message' => 'This car is not available'], 400);
+        }
+
         if ($car->type !== 'sale') {
             return response()->json(['message' => 'This car is not for sale'], 400);
         }
@@ -71,7 +75,7 @@ class RequestController extends Controller
      * @OA\Get(
      *     path="/my-purchase-requests",
      *     tags={"User - Requests - Rental"},
-     *     summary="List purchase requests made by user",
+     *     summary="List purchase requests made by user (includes rejection_reason when rejected)",
      *     security={{"bearer_token":{}}},
      *     @OA\Response(response=200, description="Successful operation"),
      * )
@@ -126,6 +130,10 @@ class RequestController extends Controller
 
         $car = Car::findOrFail($request->car_id);
 
+        if ($car->status === 'hidden' || $car->approval_status !== 'approved') {
+            return response()->json(['message' => 'This car is not available'], 400);
+        }
+
         if ($car->type !== 'rent') {
             return response()->json(['message' => 'This car is not for rent'], 400);
         }
@@ -154,7 +162,7 @@ class RequestController extends Controller
      * @OA\Get(
      *     path="/my-rental-requests",
      *     tags={"User - Requests - Rental"},
-     *     summary="List rental requests made by user",
+     *     summary="List rental requests made by user (includes rejection_reason when rejected)",
      *     security={{"bearer_token":{}}},
      *     @OA\Response(response=200, description="Successful operation"),
      * )

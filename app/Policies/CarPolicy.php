@@ -15,7 +15,11 @@ class CarPolicy
 
     public function view(?User $user, Car $car): bool
     {
-        return $car->status !== 'hidden' || ($user && ($user->id === $car->user_id || $user->hasRole('admin')));
+        if ($car->status === 'hidden') {
+            return $user && $user->id === $car->user_id;
+        }
+
+        return true;
     }
 
     public function create(User $user): bool

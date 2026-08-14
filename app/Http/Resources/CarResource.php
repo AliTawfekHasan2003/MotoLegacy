@@ -41,6 +41,8 @@ class CarResource extends JsonResource
             'warranty' => $this->warranty,
             'warranty_duration' => $this->warranty_duration,
             'status' => $this->status,
+            'is_sold' => (bool) $this->is_sold,
+            'is_rented' => (bool) $this->is_rented,
             'condition' => $this->condition,
             'purchase_price' => $this->purchase_price,
             'rental_price_per_day' => $this->rental_price_per_day,

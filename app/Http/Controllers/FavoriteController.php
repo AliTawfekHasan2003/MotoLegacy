@@ -22,6 +22,8 @@ class FavoriteController extends Controller
     {
         $favorites = Auth::user()
             ->favorites()
+            ->where('status', '!=', 'hidden')
+            ->where('approval_status', 'approved')
             ->with(['owner', 'category'])
             ->get();
 
@@ -60,6 +62,12 @@ class FavoriteController extends Controller
         $validated = $request->validate([
             'car_id' => 'required|integer|exists:cars,id'
         ]);
+
+        $car = Car::findOrFail($validated['car_id']);
+
+        if ($car->status === 'hidden' || $car->approval_status !== 'approved') {
+            return response()->json(['message' => 'This car is not available'], 400);
+        }
 
         $user = Auth::user();
 

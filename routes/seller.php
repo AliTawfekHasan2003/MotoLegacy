@@ -47,10 +47,10 @@ Route::middleware(['auth:sanctum', 'role:seller'])->group(function () {
 
     Route::get('categories',                [CategoryController::class, 'index']);
     Route::get('categories/{category}',     [CategoryController::class, 'show']);
-
-    // SSE realtime notifications (seller — car approval/rejection)
-    Route::get('sse/stream', [SseController::class, 'stream'])
-        ->middleware('sse.token')
-        ->withoutMiddleware([\Illuminate\Routing\Middleware\ThrottleRequests::class . ':api']);
 });
+
+// SSE: sse.token MUST run before auth:sanctum (EventSource cannot send Authorization headers)
+Route::get('sse/stream', [SseController::class, 'stream'])
+    ->middleware(['sse.token', 'auth:sanctum', 'role:seller'])
+    ->withoutMiddleware([\Illuminate\Routing\Middleware\ThrottleRequests::class . ':api']);
 

@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\MessageController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\SseController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -52,3 +53,8 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::post('users/{user}/reset_password', [UserController::class, 'reset_password']);
     Route::post('users/{user}/activate',       [UserController::class, 'user_status_toggle']);
 });
+
+// SSE: sse.token MUST run before auth:sanctum (EventSource cannot send Authorization headers)
+Route::get('sse/stream', [SseController::class, 'stream'])
+    ->middleware(['sse.token', 'auth:sanctum', 'role:admin'])
+    ->withoutMiddleware([\Illuminate\Routing\Middleware\ThrottleRequests::class . ':api']);

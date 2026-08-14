@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Message;
 use App\Http\Resources\MessageResource;
+use App\Services\SseNotifier;
 use Illuminate\Http\Request;
 
 class MessageController extends Controller
@@ -12,7 +13,7 @@ class MessageController extends Controller
      * @OA\Post(
      *     path="/messages",
      *     tags={"User - Contact Messages"},
-     *     summary="Submit a contact message",
+     *     summary="Submit a contact message (notifies admins via SSE type message_received)",
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\MediaType(
@@ -57,6 +58,18 @@ class MessageController extends Controller
         ]);
 
         $message = Message::create($validated);
+
+        app(SseNotifier::class)->sendToAdmins(
+            'message_received',
+            [
+                'message_id' => $message->id,
+                'name' => $message->name,
+                'email' => $message->email,
+                'subject' => $message->subject,
+            ],
+            'رسالة تواصل جديدة',
+            'وصلت رسالة جديدة من ' . $message->name
+        );
 
         return new MessageResource($message);
     }

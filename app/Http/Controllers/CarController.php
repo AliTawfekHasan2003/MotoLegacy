@@ -16,7 +16,7 @@ class CarController extends Controller
      * @OA\Get(
      *     path="/cars",
      *     tags={"User - Cars"},
-     *     summary="List all visible cars with optional filters",
+     *     summary="List approved visible cars (hidden/sold/rented cars are excluded)",
      *     @OA\Parameter(name="name", in="query", @OA\Schema(type="string")),
      *     @OA\Parameter(name="brand", in="query", @OA\Schema(type="string")),
      *     @OA\Parameter(name="type", in="query", @OA\Schema(type="string", enum={"sale","rent"})),
@@ -66,13 +66,17 @@ class CarController extends Controller
      * @OA\Get(
      *     path="/cars/{id}",
      *     tags={"User - Cars"},
-     *     summary="Get car details",
+     *     summary="Get car details (404 if hidden or not approved)",
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
      *     @OA\Response(response=200, description="Successful operation"),
      * )
      */
     public function show(Car $car)
     {
+        if ($car->status === 'hidden' || $car->approval_status !== 'approved') {
+            abort(404);
+        }
+
         return new CarResource($car->load('owner', 'category'));
     }
 }

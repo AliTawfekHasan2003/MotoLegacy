@@ -12,8 +12,8 @@ class SseController extends Controller
      * @OA\Get(
      *     path="/sse/stream",
      *     tags={"SSE"},
-     *     summary="Open SSE stream for realtime notifications",
-     *     description="Keep this connection open. Events are pushed when a purchase/rental request or car approval status changes. Sellers should use /seller/sse/stream. For browser EventSource, pass token as query param: ?token=YOUR_TOKEN",
+     *     summary="Open SSE stream for buyer/renter notifications",
+     *     description="Keep this connection open. EventSource cannot send Authorization headers: pass Sanctum token as ?token=YOUR_TOKEN (without the word Bearer). Event name is notification. Types: purchase_request_status_updated, rental_request_status_updated. data.rejection_reason is set when the seller rejects.",
      *     security={{"bearer_token":{}}},
      *     @OA\Parameter(
      *         name="token",
@@ -34,7 +34,23 @@ class SseController extends Controller
      *     path="/seller/sse/stream",
      *     tags={"SSE"},
      *     summary="Open SSE stream for seller notifications",
-     *     description="Same as /sse/stream but under seller routes. Used for car approval/rejection events.",
+     *     description="Keep this connection open. Pass token as ?token=YOUR_TOKEN. Event name is notification. Type: car_approval_status_updated. data.rejection_reason is set when the admin rejects the car.",
+     *     security={{"bearer_token":{}}},
+     *     @OA\Parameter(
+     *         name="token",
+     *         in="query",
+     *         required=false,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Response(response=200, description="text/event-stream connection", @OA\MediaType(mediaType="text/event-stream")),
+     *     @OA\Response(response=401, description="Unauthenticated")
+     * )
+     *
+     * @OA\Get(
+     *     path="/admin/sse/stream",
+     *     tags={"SSE"},
+     *     summary="Open SSE stream for admin notifications",
+     *     description="Keep this connection open. Pass token as ?token=YOUR_TOKEN. Event name is notification. Types: car_created (new car or pending review), car_updated (rejected car edited and returned to pending), message_received (new contact message).",
      *     security={{"bearer_token":{}}},
      *     @OA\Parameter(
      *         name="token",

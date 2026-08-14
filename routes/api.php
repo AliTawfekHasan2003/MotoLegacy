@@ -47,12 +47,12 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Ratings (authenticated)
     Route::post('ratings', [RatingController::class, 'store']);
-
-    // SSE realtime notifications (buyer/renter)
-    Route::get('sse/stream', [SseController::class, 'stream'])
-        ->middleware('sse.token')
-        ->withoutMiddleware([\Illuminate\Routing\Middleware\ThrottleRequests::class . ':api']);
 });
+
+// SSE: sse.token MUST run before auth:sanctum (EventSource cannot send Authorization headers)
+Route::get('sse/stream', [SseController::class, 'stream'])
+    ->middleware(['sse.token', 'auth:sanctum'])
+    ->withoutMiddleware([\Illuminate\Routing\Middleware\ThrottleRequests::class . ':api']);
 
 // ─── Public routes ────────────────────────────────────────────────────────
 Route::get('stats',                     [StatsController::class, 'index']);

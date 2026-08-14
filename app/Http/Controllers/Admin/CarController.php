@@ -21,7 +21,7 @@ class CarController extends Controller
      *     path="/admin/cars",
      *     tags={"Admin - Cars"},
      *     security={{"bearer_token":{}}},
-     *     summary="List all visible cars with optional filters",
+     *     summary="List cars visible to admin (hidden cars are excluded)",
      *     @OA\Parameter(name="name", in="query", @OA\Schema(type="string")),
      *     @OA\Parameter(name="brand", in="query", @OA\Schema(type="string")),
      *     @OA\Parameter(name="approval_status", in="query", @OA\Schema(type="string", enum={"pending","approved", "rejected"})),
@@ -79,13 +79,17 @@ class CarController extends Controller
      *     path="/admin/cars/{id}",
      *     tags={"Admin - Cars"},
      *     security={{"bearer_token":{}}},
-     *     summary="Get car details",
+     *     summary="Get car details (404 if hidden)",
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
      *     @OA\Response(response=200, description="Successful operation"),
      * )
      */
     public function show(Car $car)
     {
+        if ($car->status === 'hidden') {
+            abort(404);
+        }
+
         return new CarResource($car->load('owner', 'category'));
     }
 
@@ -94,6 +98,7 @@ class CarController extends Controller
      *     path="/admin/cars/{id}/approval",
      *     tags={"Admin - Cars"},
      *     summary="Approve or reject car",
+     *     description="عند رفض سيارة جديدة أرسل rejection_reason (اختياري). يُحفظ على السيارة ويُرسل للبائع في SSE car_approval_status_updated.",
      *     security={{"bearer_token":{}}},
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
      *     @OA\RequestBody(
@@ -101,15 +106,14 @@ class CarController extends Controller
      *         @OA\MediaType(
      *             mediaType="multipart/form-data",
      *             @OA\Schema(
-     *             required={"status"},
-     *             @OA\Property(property="status", type="string", enum={"approved","rejected"}),
-     *             @OA\Property(property="rejection_reason", type="string", nullable=true, description="Optional. Used when status is rejected"),
-     *                 @OA\Property(property="_method", type="string", example="PATCH"),
+     *                 required={"status"},
+     *                 @OA\Property(property="status", type="string", enum={"approved","rejected"}),
+     *                 @OA\Property(property="rejection_reason", type="string", nullable=true, example="المستندات غير واضحة", description="سبب رفض السيارة. يُستخدم عند status=rejected"),
+     *                 @OA\Property(property="_method", type="string", example="PATCH")
+     *             )
      *         )
-     * 
-     *       )
      *     ),
-     *     @OA\Response(response=200, description="Car status updated")
+     *     @OA\Response(response=200, description="Car status updated. Response includes rejection_reason"),
      * )
      */
     public function approveCar(Request $request, Car $car)

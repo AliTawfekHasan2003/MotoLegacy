@@ -19,7 +19,7 @@ class RequestController extends Controller
      * @OA\Get(
      *     path="/seller/incoming-purchase-requests",
      *     tags={"Seller - Requests"},
-     *     summary="List purchase requests for seller's cars",
+     *     summary="List purchase requests for seller's cars (includes rejection_reason)",
      *     security={{"bearer_token":{}}},
      *     @OA\Response(response=200, description="Successful operation"),
      * )
@@ -38,17 +38,27 @@ class RequestController extends Controller
      *     path="/seller/purchase-requests/{id}/status",
      *     tags={"Seller - Requests"},
      *     summary="Accept or reject a purchase request",
+     *     description="عند الرفض أرسل rejection_reason (اختياري). يُحفظ على الطلب ويُرسل للمشتري في SSE purchase_request_status_updated.",
      *     security={{"bearer_token":{}}},
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
      *     @OA\RequestBody(
      *         required=true,
+     *         @OA\MediaType(
+     *             mediaType="multipart/form-data",
+     *             @OA\Schema(
+     *                 required={"status"},
+     *                 @OA\Property(property="status", type="string", enum={"accepted","rejected"}),
+     *                 @OA\Property(property="rejection_reason", type="string", nullable=true, example="السعر غير مناسب", description="سبب الرفض. يُستخدم عند status=rejected"),
+     *                 @OA\Property(property="_method", type="string", example="PATCH")
+     *             )
+     *         ),
      *         @OA\JsonContent(
      *             required={"status"},
      *             @OA\Property(property="status", type="string", enum={"accepted","rejected"}),
-     *             @OA\Property(property="rejection_reason", type="string", nullable=true, description="Optional. Used when status is rejected")
+     *             @OA\Property(property="rejection_reason", type="string", nullable=true, example="السعر غير مناسب", description="سبب الرفض. يُستخدم عند status=rejected")
      *         )
      *     ),
-     *     @OA\Response(response=200, description="Status updated"),
+     *     @OA\Response(response=200, description="Status updated. Response includes rejection_reason", @OA\JsonContent(ref="#/components/schemas/PurchaseRequest")),
      *     @OA\Response(response=403, description="Unauthorized"),
      * )
      */
@@ -97,7 +107,7 @@ class RequestController extends Controller
      * @OA\Get(
      *     path="/seller/incoming-rental-requests",
      *     tags={"Seller - Requests"},
-     *     summary="List rental requests for seller's cars",
+     *     summary="List rental requests for seller's cars (includes rejection_reason)",
      *     security={{"bearer_token":{}}},
      *     @OA\Response(response=200, description="Successful operation"),
      * )
@@ -116,17 +126,27 @@ class RequestController extends Controller
      *     path="/seller/rental-requests/{id}/status",
      *     tags={"Seller - Requests"},
      *     summary="Accept or reject a rental request",
+     *     description="عند الرفض أرسل rejection_reason (اختياري). يُحفظ على الطلب ويُرسل للمستأجر في SSE rental_request_status_updated.",
      *     security={{"bearer_token":{}}},
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
      *     @OA\RequestBody(
      *         required=true,
+     *         @OA\MediaType(
+     *             mediaType="multipart/form-data",
+     *             @OA\Schema(
+     *                 required={"status"},
+     *                 @OA\Property(property="status", type="string", enum={"accepted","rejected"}),
+     *                 @OA\Property(property="rejection_reason", type="string", nullable=true, example="التواريخ غير متاحة", description="سبب الرفض. يُستخدم عند status=rejected"),
+     *                 @OA\Property(property="_method", type="string", example="PATCH")
+     *             )
+     *         ),
      *         @OA\JsonContent(
      *             required={"status"},
      *             @OA\Property(property="status", type="string", enum={"accepted","rejected"}),
-     *             @OA\Property(property="rejection_reason", type="string", nullable=true, description="Optional. Used when status is rejected")
+     *             @OA\Property(property="rejection_reason", type="string", nullable=true, example="التواريخ غير متاحة", description="سبب الرفض. يُستخدم عند status=rejected")
      *         )
      *     ),
-     *     @OA\Response(response=200, description="Status updated"),
+     *     @OA\Response(response=200, description="Status updated. Response includes rejection_reason", @OA\JsonContent(ref="#/components/schemas/RentalRequest")),
      *     @OA\Response(response=403, description="Unauthorized"),
      * )
      */

@@ -159,7 +159,7 @@
                 "tags": [
                     "Admin - Cars"
                 ],
-                "summary": "List all visible cars with optional filters",
+                "summary": "List cars visible to admin (hidden cars are excluded)",
                 "operationId": "ba01c97694fb68c55faccdc185e8d1ab",
                 "parameters": [
                     {
@@ -245,7 +245,7 @@
                 "tags": [
                     "Admin - Cars"
                 ],
-                "summary": "Get car details",
+                "summary": "Get car details (404 if hidden)",
                 "operationId": "df44b26b37782688a3ecf1f58c710fbc",
                 "parameters": [
                     {
@@ -275,6 +275,7 @@
                     "Admin - Cars"
                 ],
                 "summary": "Approve or reject car",
+                "description": "عند رفض سيارة جديدة أرسل rejection_reason (اختياري). يُحفظ على السيارة ويُرسل للبائع في SSE car_approval_status_updated.",
                 "operationId": "4a501046544ba78c9b9bf493077d78ac",
                 "parameters": [
                     {
@@ -303,8 +304,9 @@
                                         ]
                                     },
                                     "rejection_reason": {
-                                        "description": "Optional. Used when status is rejected",
+                                        "description": "سبب رفض السيارة. يُستخدم عند status=rejected",
                                         "type": "string",
+                                        "example": "المستندات غير واضحة",
                                         "nullable": true
                                     },
                                     "_method": {
@@ -319,7 +321,7 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Car status updated"
+                        "description": "Car status updated. Response includes rejection_reason"
                     }
                 },
                 "security": [
@@ -1185,7 +1187,7 @@
                 "tags": [
                     "User - Cars"
                 ],
-                "summary": "List all visible cars with optional filters",
+                "summary": "List approved visible cars (hidden/sold/rented cars are excluded)",
                 "operationId": "d8232bc6a16fec784f4a5fca541f9856",
                 "parameters": [
                     {
@@ -1254,7 +1256,7 @@
                 "tags": [
                     "User - Cars"
                 ],
-                "summary": "Get car details",
+                "summary": "Get car details (404 if hidden or not approved)",
                 "operationId": "8b43987d328663989329b7b6b01db674",
                 "parameters": [
                     {
@@ -1372,7 +1374,7 @@
                 "tags": [
                     "User - Contact Messages"
                 ],
-                "summary": "Submit a contact message",
+                "summary": "Submit a contact message (notifies admins via SSE type message_received)",
                 "operationId": "941d583a09ed64becb2c2f4753c22501",
                 "requestBody": {
                     "required": true,
@@ -1683,7 +1685,7 @@
                 "tags": [
                     "User - Requests - Rental"
                 ],
-                "summary": "List purchase requests made by user",
+                "summary": "List purchase requests made by user (includes rejection_reason when rejected)",
                 "operationId": "f2f3226d5f37760426e6dd5ff3fbfc59",
                 "responses": {
                     "200": {
@@ -1769,7 +1771,7 @@
                 "tags": [
                     "User - Requests - Rental"
                 ],
-                "summary": "List rental requests made by user",
+                "summary": "List rental requests made by user (includes rejection_reason when rejected)",
                 "operationId": "7e60966a1c0b9007497e8127d834d7f8",
                 "responses": {
                     "200": {
@@ -2062,7 +2064,8 @@
                 "tags": [
                     "Seller - Cars"
                 ],
-                "summary": "List all visible cars with optional filters",
+                "summary": "List seller cars including hidden, sold, and rented",
+                "description": "Seller sees all own cars. Filter sold with is_sold=true, rented with is_rented=true, temporarily hidden with status=hidden&is_sold=false&is_rented=false.",
                 "operationId": "8b883685d604f97137c4d4898abc6e0c",
                 "parameters": [
                     {
@@ -2088,6 +2091,33 @@
                                 "sale",
                                 "rent"
                             ]
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "available",
+                                "hidden"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "is_sold",
+                        "in": "query",
+                        "description": "Filter sold cars",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "is_rented",
+                        "in": "query",
+                        "description": "Filter rented cars",
+                        "schema": {
+                            "type": "boolean"
                         }
                     },
                     {
@@ -2134,7 +2164,7 @@
                 "tags": [
                     "Seller - Cars"
                 ],
-                "summary": "Add a new car for sale or rent",
+                "summary": "Add a new car for sale or rent (notifies admins via SSE type car_created)",
                 "operationId": "f51e8f064ae7da478e966f71b42dd2b6",
                 "requestBody": {
                     "required": true,
@@ -2320,7 +2350,7 @@
                 "tags": [
                     "Seller - Cars"
                 ],
-                "summary": "Get car details",
+                "summary": "Get seller car details including hidden/sold/rented cars",
                 "operationId": "47ced5aa6dcde59343a00ae0c67ed555",
                 "parameters": [
                     {
@@ -2347,7 +2377,7 @@
                 "tags": [
                     "Seller - Cars"
                 ],
-                "summary": "Update car details (use _method=PUT in form-data)",
+                "summary": "Update car details (use _method=PUT in form-data). If the car was rejected, approval_status becomes pending, rejection_reason is cleared, and admins get SSE type car_updated. Approved/pending cars keep their approval_status.",
                 "operationId": "6167cc3c5b2ae16ca6548bdf0eb0a02c",
                 "parameters": [
                     {
@@ -2671,7 +2701,7 @@
                     "Seller - Cars"
                 ],
                 "summary": "Hide or show a car",
-                "description": "When hiding: rejects ALL requests except request_approve_id if provided. If request_approve_id is omitted, rejects all requests. Showing the car again does not restore requests.",
+                "description": "POST /seller/cars/{id}/toggle-visibility. Body field: request_approve_id (integer, optional, nullable) — purchase or rental request id. Without it: car becomes hidden, is_sold=false, is_rented=false. With it: that request is accepted, others rejected; is_sold=true if car type is sale, is_rented=true if type is rent. Hidden cars disappear from user and admin lists; seller still sees them. Showing again sets status=available and is_sold=is_rented=false. Requests are not restored.",
                 "operationId": "dd91d1eea5e341934baff1d13e91fd02",
                 "parameters": [
                     {
@@ -2690,7 +2720,7 @@
                             "schema": {
                                 "properties": {
                                     "request_approve_id": {
-                                        "description": "Optional. Keep this request; reject every other request for this car. If omitted, reject all requests.",
+                                        "description": "Optional for sale and rent. If sent: accept this request, set is_sold or is_rented to true, reject the rest. If omitted (null): only hide the car.",
                                         "type": "integer",
                                         "nullable": true
                                     }
@@ -2765,7 +2795,7 @@
                 "tags": [
                     "Seller - Requests"
                 ],
-                "summary": "List purchase requests for seller's cars",
+                "summary": "List purchase requests for seller's cars (includes rejection_reason)",
                 "operationId": "8551a68254c7436df5af2b8f5db38f1e",
                 "responses": {
                     "200": {
@@ -2785,6 +2815,7 @@
                     "Seller - Requests"
                 ],
                 "summary": "Accept or reject a purchase request",
+                "description": "عند الرفض أرسل rejection_reason (اختياري). يُحفظ على الطلب ويُرسل للمشتري في SSE purchase_request_status_updated.",
                 "operationId": "8d55a6b5f086ebc437a6fd174d831245",
                 "parameters": [
                     {
@@ -2799,6 +2830,33 @@
                 "requestBody": {
                     "required": true,
                     "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "status"
+                                ],
+                                "properties": {
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "accepted",
+                                            "rejected"
+                                        ]
+                                    },
+                                    "rejection_reason": {
+                                        "description": "سبب الرفض. يُستخدم عند status=rejected",
+                                        "type": "string",
+                                        "example": "السعر غير مناسب",
+                                        "nullable": true
+                                    },
+                                    "_method": {
+                                        "type": "string",
+                                        "example": "PATCH"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        },
                         "application/json": {
                             "schema": {
                                 "required": [
@@ -2813,8 +2871,9 @@
                                         ]
                                     },
                                     "rejection_reason": {
-                                        "description": "Optional. Used when status is rejected",
+                                        "description": "سبب الرفض. يُستخدم عند status=rejected",
                                         "type": "string",
+                                        "example": "السعر غير مناسب",
                                         "nullable": true
                                     }
                                 },
@@ -2825,7 +2884,14 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Status updated"
+                        "description": "Status updated. Response includes rejection_reason",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PurchaseRequest"
+                                }
+                            }
+                        }
                     },
                     "403": {
                         "description": "Unauthorized"
@@ -2843,7 +2909,7 @@
                 "tags": [
                     "Seller - Requests"
                 ],
-                "summary": "List rental requests for seller's cars",
+                "summary": "List rental requests for seller's cars (includes rejection_reason)",
                 "operationId": "0b2c3050e337bad9149cdc0d44feb2ee",
                 "responses": {
                     "200": {
@@ -2863,6 +2929,7 @@
                     "Seller - Requests"
                 ],
                 "summary": "Accept or reject a rental request",
+                "description": "عند الرفض أرسل rejection_reason (اختياري). يُحفظ على الطلب ويُرسل للمستأجر في SSE rental_request_status_updated.",
                 "operationId": "d13584d554c388edd3e23de1855118f2",
                 "parameters": [
                     {
@@ -2877,6 +2944,33 @@
                 "requestBody": {
                     "required": true,
                     "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "status"
+                                ],
+                                "properties": {
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "accepted",
+                                            "rejected"
+                                        ]
+                                    },
+                                    "rejection_reason": {
+                                        "description": "سبب الرفض. يُستخدم عند status=rejected",
+                                        "type": "string",
+                                        "example": "التواريخ غير متاحة",
+                                        "nullable": true
+                                    },
+                                    "_method": {
+                                        "type": "string",
+                                        "example": "PATCH"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        },
                         "application/json": {
                             "schema": {
                                 "required": [
@@ -2891,8 +2985,9 @@
                                         ]
                                     },
                                     "rejection_reason": {
-                                        "description": "Optional. Used when status is rejected",
+                                        "description": "سبب الرفض. يُستخدم عند status=rejected",
                                         "type": "string",
+                                        "example": "التواريخ غير متاحة",
                                         "nullable": true
                                     }
                                 },
@@ -2903,7 +2998,14 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Status updated"
+                        "description": "Status updated. Response includes rejection_reason",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RentalRequest"
+                                }
+                            }
+                        }
                     },
                     "403": {
                         "description": "Unauthorized"
@@ -2921,8 +3023,8 @@
                 "tags": [
                     "SSE"
                 ],
-                "summary": "Open SSE stream for realtime notifications",
-                "description": "Keep this connection open. Events are pushed when a purchase/rental request or car approval status changes. Sellers should use /seller/sse/stream. For browser EventSource, pass token as query param: ?token=YOUR_TOKEN",
+                "summary": "Open SSE stream for buyer/renter notifications",
+                "description": "Keep this connection open. EventSource cannot send Authorization headers: pass Sanctum token as ?token=YOUR_TOKEN (without the word Bearer). Event name is notification. Types: purchase_request_status_updated, rental_request_status_updated. data.rejection_reason is set when the seller rejects.",
                 "operationId": "31418ba9243dd6fa638d1a6f37f75e66",
                 "parameters": [
                     {
@@ -2959,8 +3061,44 @@
                     "SSE"
                 ],
                 "summary": "Open SSE stream for seller notifications",
-                "description": "Same as /sse/stream but under seller routes. Used for car approval/rejection events.",
+                "description": "Keep this connection open. Pass token as ?token=YOUR_TOKEN. Event name is notification. Type: car_approval_status_updated. data.rejection_reason is set when the admin rejects the car.",
                 "operationId": "6d9e73576689efd4721e7a338e0db8e5",
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "text/event-stream connection",
+                        "content": {
+                            "text/event-stream": {}
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
+        "/admin/sse/stream": {
+            "get": {
+                "tags": [
+                    "SSE"
+                ],
+                "summary": "Open SSE stream for admin notifications",
+                "description": "Keep this connection open. Pass token as ?token=YOUR_TOKEN. Event name is notification. Types: car_created (new car or pending review), car_updated (rejected car edited and returned to pending), message_received (new contact message).",
+                "operationId": "76ef147703879bde43f195f381fbeba7",
                 "parameters": [
                     {
                         "name": "token",
@@ -3067,6 +3205,133 @@
             }
         }
     },
+    "components": {
+        "schemas": {
+            "SseNotification": {
+                "description": "JSON payload of SSE event named notification. For EventSource use ?token=SANCTUM_TOKEN (do not send Bearer in the query).",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "car_created",
+                            "car_updated",
+                            "message_received",
+                            "car_approval_status_updated",
+                            "purchase_request_status_updated",
+                            "rental_request_status_updated"
+                        ]
+                    },
+                    "title": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "body": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "data": {
+                        "description": "Includes rejection_reason when type is car_approval_status_updated, purchase_request_status_updated, or rental_request_status_updated",
+                        "type": "object"
+                    },
+                    "sent_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "Car": {
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "available",
+                            "hidden"
+                        ]
+                    },
+                    "is_sold": {
+                        "description": "true when hidden with an accepted purchase request",
+                        "type": "boolean"
+                    },
+                    "is_rented": {
+                        "description": "true when hidden with an accepted rental request",
+                        "type": "boolean"
+                    },
+                    "approval_status": {
+                        "type": "string",
+                        "enum": [
+                            "pending",
+                            "approved",
+                            "rejected"
+                        ]
+                    },
+                    "rejection_reason": {
+                        "description": "سبب رفض الأدمن للسيارة. يظهر للبائع مع إشعار car_approval_status_updated",
+                        "type": "string",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "PurchaseRequest": {
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "pending",
+                            "accepted",
+                            "rejected"
+                        ]
+                    },
+                    "rejection_reason": {
+                        "description": "سبب رفض البائع لطلب الشراء. يظهر للمشتري مع إشعار purchase_request_status_updated",
+                        "type": "string",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "RentalRequest": {
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "pending",
+                            "accepted",
+                            "rejected"
+                        ]
+                    },
+                    "rejection_reason": {
+                        "description": "سبب رفض البائع لطلب الإيجار. يظهر للمستأجر مع إشعار rental_request_status_updated",
+                        "type": "string",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "securitySchemes": {
+            "bearer_token": {
+                "type": "apiKey",
+                "description": "Enter token in format (Bearer <token>)",
+                "name": "Authorization",
+                "in": "header"
+            }
+        }
+    },
     "tags": [
         {
             "name": "Admin - Stats",
@@ -3160,15 +3425,5 @@
             "name": "User - Stats",
             "description": "User - Stats"
         }
-    ],
-    "components": {
-        "securitySchemes": {
-            "bearer_token": {
-                "type": "apiKey",
-                "description": "Enter token in format (Bearer <token>)",
-                "name": "Authorization",
-                "in": "header"
-            }
-        }
-    }
+    ]
 }
