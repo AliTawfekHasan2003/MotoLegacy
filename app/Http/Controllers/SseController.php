@@ -34,7 +34,7 @@ class SseController extends Controller
      *     path="/seller/sse/stream",
      *     tags={"SSE"},
      *     summary="Open SSE stream for seller notifications",
-     *     description="Keep this connection open. Pass token as ?token=YOUR_TOKEN. Event name is notification. Type: car_approval_status_updated. data.rejection_reason is set when the admin rejects the car.",
+     *     description="Keep this connection open. Pass token as ?token=YOUR_TOKEN. Event name is notification. Types: car_approval_status_updated (admin approve/reject car), purchase_request_created (new purchase request), rental_request_created (new rental request).",
      *     security={{"bearer_token":{}}},
      *     @OA\Parameter(
      *         name="token",

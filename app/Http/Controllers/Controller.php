@@ -29,11 +29,11 @@ use Illuminate\Routing\Controller as BaseController;
  *     @OA\Property(
  *         property="type",
  *         type="string",
- *         enum={"car_created","car_updated","message_received","car_approval_status_updated","purchase_request_status_updated","rental_request_status_updated"}
+ *         enum={"car_created","car_updated","message_received","car_approval_status_updated","purchase_request_created","rental_request_created","purchase_request_status_updated","rental_request_status_updated"}
  *     ),
  *     @OA\Property(property="title", type="string", nullable=true),
  *     @OA\Property(property="body", type="string", nullable=true),
-     *     @OA\Property(property="data", type="object", description="Includes rejection_reason when type is car_approval_status_updated, purchase_request_status_updated, or rental_request_status_updated"),
+ *     @OA\Property(property="data", type="object", description="Includes rejection_reason when type is car_approval_status_updated, purchase_request_status_updated, or rental_request_status_updated"),
  *     @OA\Property(property="sent_at", type="string", format="date-time")
  * )
  *

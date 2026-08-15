@@ -7,6 +7,7 @@ use App\Models\PurchaseRequest;
 use App\Models\RentalRequest;
 use App\Http\Resources\PurchaseRequestResource;
 use App\Http\Resources\RentalRequestResource;
+use App\Services\SseNotifier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
@@ -18,6 +19,7 @@ class RequestController extends Controller
      *     path="/purchase-requests",
      *     tags={"User - Requests - Rental"},
      *     summary="Submit a purchase request",
+     *     description="Notifies the car seller via SSE type purchase_request_created.",
      *     security={{"bearer_token":{}}},
      *     @OA\RequestBody(
      *         required=true,
@@ -69,7 +71,23 @@ class RequestController extends Controller
             'payment_method' => $request->payment_method ?? null,
         ]);
 
-        return new PurchaseRequestResource($purchaseRequest->load('user', 'car'));
+        $purchaseRequest->load('user', 'car');
+
+        app(SseNotifier::class)->send(
+            (int) $car->user_id,
+            'purchase_request_created',
+            [
+                'request_id' => $purchaseRequest->id,
+                'car_id' => $car->id,
+                'buyer_id' => $purchaseRequest->user_id,
+                'offered_price' => $purchaseRequest->offered_price,
+                'status' => $purchaseRequest->status,
+            ],
+            'طلب شراء جديد',
+            'وصلك طلب شراء جديد على سيارة ' . ($car->name ?: '#' . $car->id)
+        );
+
+        return new PurchaseRequestResource($purchaseRequest);
     }
     /**
      * @OA\Get(
@@ -96,6 +114,7 @@ class RequestController extends Controller
      *     path="/rental-requests",
      *     tags={"User - Requests - Rental"},
      *     summary="Submit a rental request",
+     *     description="Notifies the car seller via SSE type rental_request_created.",
      *     security={{"bearer_token":{}}},
      *     @OA\RequestBody(
      *         required=true,
@@ -155,7 +174,25 @@ class RequestController extends Controller
             'total_price' => $totalPrice,
         ]);
 
-        return new RentalRequestResource($rentalRequest->load('user', 'car'));
+        $rentalRequest->load('user', 'car');
+
+        app(SseNotifier::class)->send(
+            (int) $car->user_id,
+            'rental_request_created',
+            [
+                'request_id' => $rentalRequest->id,
+                'car_id' => $car->id,
+                'renter_id' => $rentalRequest->user_id,
+                'start_date' => $rentalRequest->start_date,
+                'end_date' => $rentalRequest->end_date,
+                'total_price' => $rentalRequest->total_price,
+                'status' => $rentalRequest->status,
+            ],
+            'طلب إيجار جديد',
+            'وصلك طلب إيجار جديد على سيارة ' . ($car->name ?: '#' . $car->id)
+        );
+
+        return new RentalRequestResource($rentalRequest);
     }
 
     /**
