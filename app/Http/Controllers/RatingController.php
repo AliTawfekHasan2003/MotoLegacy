@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\PurchaseRequest;
 use App\Models\Rating;
+use App\Models\RentalRequest;
 use App\Models\User;
 use App\Http\Resources\RatingResource;
 use Illuminate\Http\Request;
@@ -38,6 +40,7 @@ class RatingController extends Controller
      *     path="/ratings",
      *     tags={"User - Ratings & Reviews"},
      *     summary="Rate a seller",
+     *     description="Only allowed if the authenticated user has at least one accepted purchase request or accepted rental request for a car owned by this seller.",
      *     security={{"bearer_token":{}}},
      *     @OA\RequestBody(
      *         required=true,
@@ -69,6 +72,7 @@ class RatingController extends Controller
      *         )
      *     ),
      *     @OA\Response(response=200, description="Rating submitted"),
+     *     @OA\Response(response=400, description="Not a seller, or no accepted purchase/rental request with this seller"),
      * )
      */
     public function store(Request $request)
@@ -87,8 +91,26 @@ class RatingController extends Controller
             ], 400);
         }
 
+        $userId = Auth::id();
+        $sellerId = (int) $validated['seller_id'];
+
+        $hasAcceptedDeal = PurchaseRequest::where('user_id', $userId)
+            ->where('status', 'accepted')
+            ->whereHas('car', fn ($q) => $q->where('user_id', $sellerId))
+            ->exists()
+            || RentalRequest::where('user_id', $userId)
+                ->where('status', 'accepted')
+                ->whereHas('car', fn ($q) => $q->where('user_id', $sellerId))
+                ->exists();
+
+        if (!$hasAcceptedDeal) {
+            return response()->json([
+                'message' => 'You can only rate a seller after an accepted purchase or rental request with them'
+            ], 400);
+        }
+
         $rating = Auth::user()->ratingsGiven()->updateOrCreate(
-            ['seller_id' => $validated['seller_id']],
+            ['seller_id' => $sellerId],
             [
                 'rating' => $validated['rating'],
                 'comment' => $validated['comment'] ?? null

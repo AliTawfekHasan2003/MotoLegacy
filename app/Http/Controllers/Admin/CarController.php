@@ -141,10 +141,10 @@ class CarController extends Controller
                 'approval_status' => $car->approval_status,
                 'rejection_reason' => $car->rejection_reason,
             ],
-            $isRejected ? 'تم رفض السيارة' : 'تم قبول السيارة',
+            $isRejected ? 'Car rejected' : 'Car approved',
             $isRejected
-                ? ($car->rejection_reason ?: 'تم رفض سيارتك من الإدارة')
-                : 'تم قبول سيارتك من الإدارة'
+                ? ($car->rejection_reason ?: 'Your car was rejected by admin')
+                : 'Your car was approved by admin'
         );
 
         return response()->json([

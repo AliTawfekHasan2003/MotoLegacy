@@ -9,6 +9,7 @@ use App\Http\Controllers\MessageController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\RatingController;
 use App\Http\Controllers\RequestController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\SseController;
 use App\Http\Controllers\StatsController;
 
@@ -47,6 +48,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Ratings (authenticated)
     Route::post('ratings', [RatingController::class, 'store']);
+
+    // Notifications
+    Route::get('notifications', [NotificationController::class, 'index']);
 });
 
 // SSE: sse.token MUST run before auth:sanctum (EventSource cannot send Authorization headers)

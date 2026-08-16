@@ -4,6 +4,7 @@ use App\Http\Controllers\Seller\AuthController as SellerAuthController;
 use App\Http\Controllers\Seller\CarController as SellerCarController;
 use App\Http\Controllers\Seller\CategoryController;
 use App\Http\Controllers\Seller\RequestController as SellerRequestController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\SseController;
 use Illuminate\Support\Facades\Route;
 
@@ -47,6 +48,9 @@ Route::middleware(['auth:sanctum', 'role:seller'])->group(function () {
 
     Route::get('categories',                [CategoryController::class, 'index']);
     Route::get('categories/{category}',     [CategoryController::class, 'show']);
+
+    // Notifications
+    Route::get('notifications', [NotificationController::class, 'index']);
 });
 
 // SSE: sse.token MUST run before auth:sanctum (EventSource cannot send Authorization headers)

@@ -433,7 +433,7 @@ class CarController extends Controller
     private function rejectOtherRequestsOnHide(Car $car, $approveId = null): void
     {
         $approveId = $approveId ? (int) $approveId : null;
-        $reason = 'السيارة لم تعد متاحة';
+        $reason = 'The car is no longer available';
         $notifier = app(SseNotifier::class);
 
         if ($car->type === 'sale') {
@@ -458,8 +458,8 @@ class CarController extends Controller
                             'status' => 'accepted',
                             'rejection_reason' => null,
                         ],
-                        'تم قبول طلب الشراء',
-                        'تم قبول طلب الشراء الخاص بك'
+                        'Purchase request accepted',
+                        'Your purchase request was accepted'
                     );
                 }
             }
@@ -484,7 +484,7 @@ class CarController extends Controller
                         'status' => 'rejected',
                         'rejection_reason' => $reason,
                     ],
-                    'تم رفض طلب الشراء',
+                    'Purchase request rejected',
                     $reason
                 );
             }
@@ -513,8 +513,8 @@ class CarController extends Controller
                         'status' => 'accepted',
                         'rejection_reason' => null,
                     ],
-                    'تم قبول طلب الإيجار',
-                    'تم قبول طلب الإيجار الخاص بك'
+                    'Rental request accepted',
+                    'Your rental request was accepted'
                 );
             }
         }
@@ -539,7 +539,7 @@ class CarController extends Controller
                     'status' => 'rejected',
                     'rejection_reason' => $reason,
                 ],
-                'تم رفض طلب الإيجار',
+                'Rental request rejected',
                 $reason
             );
         }

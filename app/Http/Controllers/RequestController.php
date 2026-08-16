@@ -83,8 +83,8 @@ class RequestController extends Controller
                 'offered_price' => $purchaseRequest->offered_price,
                 'status' => $purchaseRequest->status,
             ],
-            'طلب شراء جديد',
-            'وصلك طلب شراء جديد على سيارة ' . ($car->name ?: '#' . $car->id)
+            'New purchase request',
+            'You received a new purchase request for ' . ($car->name ?: '#' . $car->id)
         );
 
         return new PurchaseRequestResource($purchaseRequest);
@@ -188,8 +188,8 @@ class RequestController extends Controller
                 'total_price' => $rentalRequest->total_price,
                 'status' => $rentalRequest->status,
             ],
-            'طلب إيجار جديد',
-            'وصلك طلب إيجار جديد على سيارة ' . ($car->name ?: '#' . $car->id)
+            'New rental request',
+            'You received a new rental request for ' . ($car->name ?: '#' . $car->id)
         );
 
         return new RentalRequestResource($rentalRequest);

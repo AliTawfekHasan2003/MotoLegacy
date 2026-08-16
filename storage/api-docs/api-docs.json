@@ -1418,6 +1418,102 @@
                 }
             }
         },
+        "/notifications": {
+            "get": {
+                "tags": [
+                    "User - Notifications"
+                ],
+                "summary": "List notifications for the authenticated buyer/renter",
+                "operationId": "0f031f66cd8c52bf73e89fb2d050ad83",
+                "parameters": [
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 20
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated notifications"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
+        "/seller/notifications": {
+            "get": {
+                "tags": [
+                    "Seller - Notifications"
+                ],
+                "summary": "List notifications for the authenticated seller",
+                "operationId": "4eed207aa3642263d3613df2e4446b35",
+                "parameters": [
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 20
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated notifications"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
+        "/admin/notifications": {
+            "get": {
+                "tags": [
+                    "Admin - Notifications"
+                ],
+                "summary": "List notifications for the authenticated admin",
+                "operationId": "a23b0681719bdfee3e270e0e939176d3",
+                "parameters": [
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 20
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated notifications"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearer_token": []
+                    }
+                ]
+            }
+        },
         "/forgot-password": {
             "post": {
                 "tags": [
@@ -1572,6 +1668,7 @@
                     "User - Ratings & Reviews"
                 ],
                 "summary": "Rate a seller",
+                "description": "Only allowed if the authenticated user has at least one accepted purchase request or accepted rental request for a car owned by this seller.",
                 "operationId": "f76110814bddc4625c9a09750809714c",
                 "requestBody": {
                     "required": true,
@@ -1608,6 +1705,9 @@
                 "responses": {
                     "200": {
                         "description": "Rating submitted"
+                    },
+                    "400": {
+                        "description": "Not a seller, or no accepted purchase/rental request with this seller"
                     }
                 },
                 "security": [
@@ -1623,6 +1723,7 @@
                     "User - Requests - Rental"
                 ],
                 "summary": "Submit a purchase request",
+                "description": "Notifies the car seller via SSE type purchase_request_created.",
                 "operationId": "71aee536e646e875b8195f2960a9a6d9",
                 "requestBody": {
                     "required": true,
@@ -1705,6 +1806,7 @@
                     "User - Requests - Rental"
                 ],
                 "summary": "Submit a rental request",
+                "description": "Notifies the car seller via SSE type rental_request_created.",
                 "operationId": "4f148be0ff76348f1c311e78250dcc87",
                 "requestBody": {
                     "required": true,
@@ -3061,7 +3163,7 @@
                     "SSE"
                 ],
                 "summary": "Open SSE stream for seller notifications",
-                "description": "Keep this connection open. Pass token as ?token=YOUR_TOKEN. Event name is notification. Type: car_approval_status_updated. data.rejection_reason is set when the admin rejects the car.",
+                "description": "Keep this connection open. Pass token as ?token=YOUR_TOKEN. Event name is notification. Types: car_approval_status_updated (admin approve/reject car), purchase_request_created (new purchase request), rental_request_created (new rental request).",
                 "operationId": "6d9e73576689efd4721e7a338e0db8e5",
                 "parameters": [
                     {
@@ -3208,11 +3310,11 @@
     "components": {
         "schemas": {
             "SseNotification": {
-                "description": "JSON payload of SSE event named notification. For EventSource use ?token=SANCTUM_TOKEN (do not send Bearer in the query).",
+                "description": "JSON payload of SSE event named notification (also returned by GET /notifications). id matches the persisted notification row. For EventSource use ?token=SANCTUM_TOKEN (do not send Bearer in the query).",
                 "properties": {
                     "id": {
-                        "type": "string",
-                        "format": "uuid"
+                        "description": "Persisted notification id",
+                        "type": "string"
                     },
                     "type": {
                         "type": "string",
@@ -3221,6 +3323,8 @@
                             "car_updated",
                             "message_received",
                             "car_approval_status_updated",
+                            "purchase_request_created",
+                            "rental_request_created",
                             "purchase_request_status_updated",
                             "rental_request_status_updated"
                         ]
@@ -3388,6 +3492,18 @@
         {
             "name": "User - Contact Messages",
             "description": "User - Contact Messages"
+        },
+        {
+            "name": "User - Notifications",
+            "description": "User - Notifications"
+        },
+        {
+            "name": "Seller - Notifications",
+            "description": "Seller - Notifications"
+        },
+        {
+            "name": "Admin - Notifications",
+            "description": "Admin - Notifications"
         },
         {
             "name": "Auth - Password Reset",

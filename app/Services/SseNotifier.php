@@ -3,30 +3,38 @@
 namespace App\Services;
 
 use App\Models\Car;
+use App\Models\Notification;
 use App\Models\User;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
 
 class SseNotifier
 {
     public function send(int $userId, string $type, array $data = [], ?string $title = null, ?string $body = null): void
     {
+        $notification = Notification::create([
+            'user_id' => $userId,
+            'type' => $type,
+            'title' => $title,
+            'body' => $body,
+            'data' => $data,
+        ]);
+
+        $event = [
+            'id' => (string) $notification->id,
+            'type' => $notification->type,
+            'title' => $notification->title,
+            'body' => $notification->body,
+            'data' => $notification->data ?? [],
+            'sent_at' => $notification->created_at->toIso8601String(),
+        ];
+
         $key = $this->key($userId);
         $lock = Cache::lock("sse:lock:{$userId}", 5);
 
-        $lock->block(3, function () use ($key, $type, $data, $title, $body) {
+        $lock->block(3, function () use ($key, $event) {
             $events = Cache::get($key, []);
-
-            $events[] = [
-                'id' => (string) Str::uuid(),
-                'type' => $type,
-                'title' => $title,
-                'body' => $body,
-                'data' => $data,
-                'sent_at' => now()->toIso8601String(),
-            ];
-
+            $events[] = $event;
             Cache::put($key, $events, now()->addMinutes(5));
         });
     }
@@ -59,8 +67,8 @@ class SseNotifier
                 'type' => $car->type,
                 'approval_status' => $car->approval_status,
             ],
-            'سيارة جديدة بانتظار الموافقة',
-            'تمت إضافة سيارة جديدة وتحتاج مراجعة الإدارة'
+            'New car pending approval',
+            'A new car was added and needs admin review'
         );
     }
 
@@ -76,8 +84,8 @@ class SseNotifier
                 'type' => $car->type,
                 'approval_status' => $car->approval_status,
             ],
-            'تم تعديل سيارة بانتظار الموافقة',
-            'تم تعديل سيارة مرفوضة وأعيدت للمراجعة'
+            'Updated car pending approval',
+            'A rejected car was edited and returned for review'
         );
     }
 

@@ -24,8 +24,8 @@ use Illuminate\Routing\Controller as BaseController;
  *
  * @OA\Schema(
  *     schema="SseNotification",
- *     description="JSON payload of SSE event named notification. For EventSource use ?token=SANCTUM_TOKEN (do not send Bearer in the query).",
- *     @OA\Property(property="id", type="string", format="uuid"),
+ *     description="JSON payload of SSE event named notification (also returned by GET /notifications). id matches the persisted notification row. For EventSource use ?token=SANCTUM_TOKEN (do not send Bearer in the query).",
+ *     @OA\Property(property="id", type="string", description="Persisted notification id"),
  *     @OA\Property(
  *         property="type",
  *         type="string",

@@ -92,10 +92,10 @@ class RequestController extends Controller
                 'status' => $purchaseRequest->status,
                 'rejection_reason' => $purchaseRequest->rejection_reason,
             ],
-            $isRejected ? 'تم رفض طلب الشراء' : 'تم قبول طلب الشراء',
+            $isRejected ? 'Purchase request rejected' : 'Purchase request accepted',
             $isRejected
-                ? ($purchaseRequest->rejection_reason ?: 'تم رفض طلب الشراء الخاص بك')
-                : 'تم قبول طلب الشراء الخاص بك'
+                ? ($purchaseRequest->rejection_reason ?: 'Your purchase request was rejected')
+                : 'Your purchase request was accepted'
         );
 
         return new PurchaseRequestResource($purchaseRequest);
@@ -180,10 +180,10 @@ class RequestController extends Controller
                 'status' => $rentalRequest->status,
                 'rejection_reason' => $rentalRequest->rejection_reason,
             ],
-            $isRejected ? 'تم رفض طلب الإيجار' : 'تم قبول طلب الإيجار',
+            $isRejected ? 'Rental request rejected' : 'Rental request accepted',
             $isRejected
-                ? ($rentalRequest->rejection_reason ?: 'تم رفض طلب الإيجار الخاص بك')
-                : 'تم قبول طلب الإيجار الخاص بك'
+                ? ($rentalRequest->rejection_reason ?: 'Your rental request was rejected')
+                : 'Your rental request was accepted'
         );
 
         return new RentalRequestResource($rentalRequest);

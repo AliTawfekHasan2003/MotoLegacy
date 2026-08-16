@@ -67,8 +67,8 @@ class MessageController extends Controller
                 'email' => $message->email,
                 'subject' => $message->subject,
             ],
-            'رسالة تواصل جديدة',
-            'وصلت رسالة جديدة من ' . $message->name
+            'New contact message',
+            'You received a new message from ' . $message->name
         );
 
         return new MessageResource($message);
