@@ -13,6 +13,7 @@ use Spatie\Permission\Models\Role;
 
 use App\Http\Resources\UserResource;
 use App\Services\DeletionGuard;
+use App\Support\PhoneValidation;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -122,7 +123,7 @@ class UserController extends Controller
             'name'              => ['required', 'string'],
             'email'             => ['required', 'string', 'email', 'unique:users'],
             'password'          => ['required', 'string', 'min:6', 'confirmed'],
-            'phone'             => ['required', 'unique:users'],
+            'phone'             => PhoneValidation::rules(['required'], ['unique:users']),
             'role_id'           => ['required', 'integer', 'exists:roles,id'],
             'birth_date'        => ['nullable', 'date'],
             'address'           => ['nullable', 'string'],
@@ -204,7 +205,7 @@ class UserController extends Controller
         $request->validate([
             'name'                  => ['required', 'string'],
             'email'                 => ['required', 'string', 'email', Rule::unique('users', 'email')->ignore($user->id)],
-            'phone'                 => ['required', Rule::unique('users', 'phone')->ignore($user->id)],
+            'phone'                 => PhoneValidation::rules(['required'], [Rule::unique('users', 'phone')->ignore($user->id)]),
             'role_id'               => ['exists:roles,id'],
             'birth_date'            => ['nullable', 'date'],
             'address'               => ['nullable', 'string'],
@@ -243,9 +244,7 @@ class UserController extends Controller
     */
     public function destroy(User $user)
     {
-        DeletionGuard::user($user);
-
-        $user->delete();
+        DeletionGuard::deleteUser($user);
 
         return response()->json(null,204);
     }

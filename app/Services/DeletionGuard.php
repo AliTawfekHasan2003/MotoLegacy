@@ -6,8 +6,8 @@ use App\Models\Car;
 use App\Models\Category;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Models\Role;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class DeletionGuard
 {
@@ -52,6 +52,14 @@ class DeletionGuard
         ]));
     }
 
+    public static function deleteUser(User $user): void
+    {
+        self::user($user);
+
+        $user->tokens()->delete();
+        $user->delete();
+    }
+
     private static function collectRelations(array $checks): array
     {
         return array_keys(array_filter($checks));
@@ -63,9 +71,10 @@ class DeletionGuard
             return;
         }
 
-        throw new HttpException(
-            409,
-            'Cannot delete this ' . $entity . ' because it is linked to: ' . implode(', ', $related) . '.'
-        );
+        $message = 'Cannot delete this ' . $entity . ' because it is linked to: ' . implode(', ', $related) . '.';
+
+        throw ValidationException::withMessages([
+            $entity => [$message],
+        ]);
     }
 }

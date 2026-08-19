@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use App\Services\DeletionGuard;
+use App\Support\PhoneValidation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -48,7 +49,7 @@ class AuthController extends Controller
             'name'                => ['required', 'string'],
             'email'               => ['required', 'string', 'email', 'unique:users'],
             'password'            => ['required', 'string', 'min:6', 'confirmed'],
-            'phone'               => ['required', 'min:8', 'string'],
+            'phone'               => PhoneValidation::rules(),
             'birth_date'          => ['nullable', 'date'],
             'address'             => ['nullable', 'string'],
             'license_number'      => ['nullable', 'string'],
@@ -210,7 +211,7 @@ class AuthController extends Controller
 
         $request->validate([
             'name'                => ['required', 'string'],
-            'phone'               => ['required', 'string', Rule::unique('users', 'phone')->ignore($user->id)],
+            'phone'               => PhoneValidation::rules(['required'], [Rule::unique('users', 'phone')->ignore($user->id)]),
             'email'               => ['required', 'string', Rule::unique('users', 'email')->ignore($user->id)],
             'birth_date'          => ['nullable', 'date'],
             'address'             => ['nullable', 'string'],
@@ -288,8 +289,7 @@ class AuthController extends Controller
     public function delete_account()
     {
         $user = to_user(Auth::user());
-        DeletionGuard::user($user);
-        $user->delete();
+        DeletionGuard::deleteUser($user);
         return response()->json(null, 204);
     }
 }

@@ -11,6 +11,7 @@ use App\Models\User;
 
 use App\Http\Resources\UserResource;
 use App\Services\DeletionGuard;
+use App\Support\PhoneValidation;
 use Illuminate\Validation\Rule;
 
 class AuthController extends Controller
@@ -54,7 +55,7 @@ class AuthController extends Controller
             'name'       => ['required', 'string'],
             'email'      => ['required', 'string', 'email', 'unique:users'],
             'password'   => ['required', 'string', 'min:6', 'confirmed'],
-            'phone'      => ['required', 'string'],
+            'phone'      => PhoneValidation::rules(),
             'birth_date' => ['nullable', 'date'],
             'address'    => ['nullable', 'string'],
         ]);
@@ -189,7 +190,7 @@ class AuthController extends Controller
 
         $request->validate([
             'name'                  => ['required', 'string'],
-            'phone'                 => ['required', 'string', Rule::unique('users', 'phone')->ignore($user->id)],
+            'phone'                 => PhoneValidation::rules(['required'], [Rule::unique('users', 'phone')->ignore($user->id)]),
             'email'                 => ['required', 'string', Rule::unique('users', 'email')->ignore($user->id)],
             'birth_date'            => ['nullable', 'date'],
             'address'               => ['nullable', 'string'],
@@ -286,8 +287,7 @@ class AuthController extends Controller
     public function delete_user()
     {
         $user = to_user(Auth::user());
-        DeletionGuard::user($user);
-        $user->delete();
+        DeletionGuard::deleteUser($user);
         return response()->json(null, 204);
     }
 }
