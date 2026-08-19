@@ -3,11 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\RoleResource;
+use App\Services\DeletionGuard;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
-use Illuminate\Support\Facades\DB;
-use App\Http\Resources\RoleResource;
 
 class RoleController extends Controller
 {
@@ -84,5 +83,14 @@ class RoleController extends Controller
             $roles = $query->with('permissions')->paginate($request->per_page ?? 10);
 
         return RoleResource::collection($roles);
+    }
+
+    public function destroy(Role $role)
+    {
+        DeletionGuard::role($role);
+
+        $role->delete();
+
+        return response()->json(null, 204);
     }
 }

@@ -8,6 +8,7 @@ use App\Models\RentalRequest;
 use App\Http\Resources\PurchaseRequestResource;
 use App\Http\Resources\RentalRequestResource;
 use App\Services\SseNotifier;
+use App\Support\PriceValidation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
@@ -44,7 +45,7 @@ class RequestController extends Controller
     {
         $request->validate([
             'car_id' => 'required|exists:cars,id',
-            'offered_price' => 'nullable|numeric|min:0',
+            'offered_price' => PriceValidation::rules(),
             'meeting_date' => 'nullable|date',
             'notes' => 'nullable|string',
             'id_number' => 'nullable|string',
@@ -160,7 +161,9 @@ class RequestController extends Controller
         $start = Carbon::parse($request->start_date);
         $end = Carbon::parse($request->end_date);
         $days = $start->diffInDays($end) + 1;
-        $totalPrice = $days * $car->rental_price_per_day;
+        $totalPrice = round($days * $car->rental_price_per_day, 2);
+
+        PriceValidation::assertValid($totalPrice, 'total_price');
 
         $rentalRequest = Auth::user()->rentalRequests()->create([
             'car_id' => $car->id,

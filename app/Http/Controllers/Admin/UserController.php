@@ -12,6 +12,7 @@ use App\Models\User;
 use Spatie\Permission\Models\Role;
 
 use App\Http\Resources\UserResource;
+use App\Services\DeletionGuard;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -242,6 +243,8 @@ class UserController extends Controller
     */
     public function destroy(User $user)
     {
+        DeletionGuard::user($user);
+
         $user->delete();
 
         return response()->json(null,204);

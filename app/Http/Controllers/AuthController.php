@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use App\Models\User;
 
 use App\Http\Resources\UserResource;
+use App\Services\DeletionGuard;
 use Illuminate\Validation\Rule;
 
 class AuthController extends Controller
@@ -285,6 +286,7 @@ class AuthController extends Controller
     public function delete_user()
     {
         $user = to_user(Auth::user());
+        DeletionGuard::user($user);
         $user->delete();
         return response()->json(null, 204);
     }

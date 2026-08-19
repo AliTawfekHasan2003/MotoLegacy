@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Http\Resources\CategoryResource;
+use App\Services\DeletionGuard;
 use Illuminate\Http\Request;
 
 class CategoryController extends Controller
@@ -87,6 +88,8 @@ class CategoryController extends Controller
      */
     public function destroy(Category $category)
     {
+        DeletionGuard::category($category);
+
         $category->delete();
 
         return response()->json(null, 204);

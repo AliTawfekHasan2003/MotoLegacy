@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\CarResource;
 use App\Models\Car;
+use App\Support\PriceValidation;
 use App\Services\SseNotifier;
 
 class CarController extends Controller
@@ -35,6 +36,10 @@ class CarController extends Controller
      */
     public function index(Request $request)
     {
+        $request->validate([
+            'min_price' => PriceValidation::filterRules(),
+            'max_price' => PriceValidation::filterRules(),
+        ]);
 
         $query = Car::with(['owner', 'category'])->where('status', '!=', 'hidden');
 

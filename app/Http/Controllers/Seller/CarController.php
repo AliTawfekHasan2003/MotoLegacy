@@ -7,7 +7,9 @@ use App\Models\Car;
 use App\Models\PurchaseRequest;
 use App\Models\RentalRequest;
 use App\Http\Resources\CarResource;
+use App\Services\DeletionGuard;
 use App\Services\SseNotifier;
+use App\Support\PriceValidation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -79,8 +81,8 @@ class CarController extends Controller
             'doors'                => 'required|integer',
             'seats'                => 'required|integer',
             'condition'            => 'required|numeric|min:1|max:5',
-            'purchase_price'       => 'required_if:type,sale|nullable|numeric',
-            'rental_price_per_day' => 'required_if:type,rent|nullable|numeric',
+            'purchase_price'       => PriceValidation::rules(['required_if:type,sale', 'nullable']),
+            'rental_price_per_day' => PriceValidation::rules(['required_if:type,rent', 'nullable']),
             'image'                => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
             'gallery'              => 'nullable|array',
             'gallery.*'            => 'image|mimes:jpeg,png,jpg,webp|max:5120',
@@ -202,8 +204,8 @@ class CarController extends Controller
             'doors'                => 'nullable|integer',
             'seats'                => 'nullable|integer',
             'condition'            => 'nullable|numeric|min:1|max:5',
-            'purchase_price'       => 'nullable|numeric',
-            'rental_price_per_day' => 'nullable|numeric',
+            'purchase_price'       => PriceValidation::rules(),
+            'rental_price_per_day' => PriceValidation::rules(),
             'image'                => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
             'ownership_document'   => 'nullable|file|mimes:jpeg,png,jpg,webp,pdf|max:10240',
             'insurance_document'   => 'nullable|file|mimes:jpeg,png,jpg,webp,pdf|max:10240',
@@ -359,6 +361,8 @@ class CarController extends Controller
     public function destroy(Car $car)
     {
         $this->authorize('delete', $car);
+
+        DeletionGuard::car($car);
 
         if ($car->image) {
             $this->deleteStoredFile($car->image);
@@ -567,6 +571,11 @@ class CarController extends Controller
      */
     public function index(Request $request)
     {
+        $request->validate([
+            'min_price' => PriceValidation::filterRules(),
+            'max_price' => PriceValidation::filterRules(),
+        ]);
+
         $user = to_user(Auth::user());
 
         $query = Car::where('user_id', $user->id)->with(['owner', 'category']);

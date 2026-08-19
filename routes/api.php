@@ -53,12 +53,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('notifications', [NotificationController::class, 'index']);
 });
 
-// SSE: sse.token MUST run before auth:sanctum (EventSource cannot send Authorization headers)
 Route::get('sse/stream', [SseController::class, 'stream'])
     ->middleware(['sse.token', 'auth:sanctum'])
     ->withoutMiddleware([\Illuminate\Routing\Middleware\ThrottleRequests::class . ':api']);
 
-// ─── Public routes ────────────────────────────────────────────────────────
 Route::get('stats',                     [StatsController::class, 'index']);
 Route::post('messages',                 [MessageController::class, 'store']);
 Route::get('ratings/{seller_id}',       [RatingController::class, 'index']);

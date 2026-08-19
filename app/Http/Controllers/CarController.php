@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Car;
 use App\Http\Resources\CarResource;
+use App\Support\PriceValidation;
 use Illuminate\Http\Request;
 
 /**
@@ -29,6 +30,11 @@ class CarController extends Controller
      */
     public function index(Request $request)
     {
+        $request->validate([
+            'min_price' => PriceValidation::filterRules(),
+            'max_price' => PriceValidation::filterRules(),
+        ]);
+
         $query = Car::where('approval_status', 'approved')->with(['owner', 'category'])->where('status', '!=', 'hidden');
 
         if ($request->filled('name')) {

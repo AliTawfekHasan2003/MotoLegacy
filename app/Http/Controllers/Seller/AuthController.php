@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Seller;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\UserResource;
 use App\Models\User;
+use App\Services\DeletionGuard;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -47,7 +48,7 @@ class AuthController extends Controller
             'name'                => ['required', 'string'],
             'email'               => ['required', 'string', 'email', 'unique:users'],
             'password'            => ['required', 'string', 'min:6', 'confirmed'],
-            'phone'               => ['required', 'string'],
+            'phone'               => ['required', 'min:8', 'string'],
             'birth_date'          => ['nullable', 'date'],
             'address'             => ['nullable', 'string'],
             'license_number'      => ['nullable', 'string'],
@@ -287,6 +288,7 @@ class AuthController extends Controller
     public function delete_account()
     {
         $user = to_user(Auth::user());
+        DeletionGuard::user($user);
         $user->delete();
         return response()->json(null, 204);
     }
